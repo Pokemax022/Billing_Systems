@@ -14,7 +14,10 @@ def normalize_database_url(url: str) -> str:
     Ensure compatibility with SQLAlchemy 2.0+ and psycopg2/psycopg3.
     Converts legacy 'postgres://' or 'postgresql+psycopg://' prefixes to 'postgresql://'.
     Strips surrounding quotes if pasted into Vercel UI.
+    Safely URL-encodes special characters in passwords (such as '@', '#', '%')
+    to prevent corrupted URL parsing and malformed hostnames.
     """
+    from urllib.parse import quote, unquote
     if not url:
         return ''
     url = url.strip()
@@ -22,11 +25,21 @@ def normalize_database_url(url: str) -> str:
     if (url.startswith('"') and url.endswith('"')) or (url.startswith("'") and url.endswith("'")):
         url = url[1:-1].strip()
     if url.startswith('postgres://'):
-        url = url.replace('postgres://', 'postgresql://', 1)
+        url = 'postgresql://' + url[len('postgres://'):]
     elif url.startswith('postgresql+psycopg://'):
-        url = url.replace('postgresql+psycopg://', 'postgresql://', 1)
+        url = 'postgresql://' + url[len('postgresql+psycopg://'):]
     elif url.startswith('postgresql+psycopg2://'):
-        url = url.replace('postgresql+psycopg2://', 'postgresql://', 1)
+        url = 'postgresql://' + url[len('postgresql+psycopg2://'):]
+        
+    if '://' in url and '@' in url:
+        scheme, rest = url.split('://', 1)
+        cred_part, host_part = rest.rsplit('@', 1)
+        if ':' in cred_part:
+            username, password = cred_part.split(':', 1)
+            clean_pw = unquote(password)
+            encoded_pw = quote(clean_pw, safe='')
+            url = f"{scheme}://{username}:{encoded_pw}@{host_part}"
+
     return url
 
 

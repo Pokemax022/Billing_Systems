@@ -19,7 +19,7 @@ def login():
         try:
             user = User.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
-                login_user(user)
+                login_user(user, remember=True)
                 next_page = request.args.get('next')
                 # Validate next_page to prevent open redirect
                 if next_page and next_page.startswith('/') and not next_page.startswith('//'):
@@ -28,7 +28,7 @@ def login():
                 
             flash('Invalid username or password', 'danger')
         except Exception as e:
-            current_app.logger.exception("Database error during login for user '%s': %s", username, e)
+            current_app.logger.exception("LOGIN DATABASE QUERY FAILED for user '%s': %s", username, e)
             flash('A database connection error occurred. Please check your network or credentials and try again.', 'danger')
             return render_template('login.html'), 500
             
