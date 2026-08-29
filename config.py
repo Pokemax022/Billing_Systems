@@ -57,9 +57,12 @@ class Config:
         # SQLite configuration
         SQLALCHEMY_ENGINE_OPTIONS = {}
 
-    # File Storage Paths
-    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', str(BASE_DIR / 'excel_import'))
-    PDF_FOLDER = os.getenv('PDF_FOLDER', str(BASE_DIR / 'pdf'))
+    # File Storage Paths (safely handle Vercel serverless read-only filesystem via /tmp)
+    is_serverless = bool(os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME'))
+    default_upload = '/tmp/excel_import' if is_serverless else str(BASE_DIR / 'excel_import')
+    default_pdf = '/tmp/pdf' if is_serverless else str(BASE_DIR / 'pdf')
+    UPLOAD_FOLDER = os.getenv('UPLOAD_FOLDER', default_upload)
+    PDF_FOLDER = os.getenv('PDF_FOLDER', default_pdf)
     MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))  # 16 MB max upload
 
 

@@ -25,8 +25,18 @@ def create_app(config_object=None):
     app.config.from_object(config_object)
 
     # Ensure required directories exist
-    os.makedirs(app.config.get('UPLOAD_FOLDER', os.path.join(app.root_path, 'excel_import')), exist_ok=True)
-    os.makedirs(app.config.get('PDF_FOLDER', os.path.join(app.root_path, 'pdf')), exist_ok=True)
+    upload_dir = app.config.get('UPLOAD_FOLDER')
+    pdf_dir = app.config.get('PDF_FOLDER')
+    if upload_dir:
+        try:
+            os.makedirs(upload_dir, exist_ok=True)
+        except Exception:
+            pass
+    if pdf_dir:
+        try:
+            os.makedirs(pdf_dir, exist_ok=True)
+        except Exception:
+            pass
 
     # Initialize extensions
     db.init_app(app)
