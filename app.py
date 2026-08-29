@@ -50,7 +50,11 @@ def create_app(config_object=None):
     @login_manager.user_loader
     def load_user(user_id):
         from models.user import User
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception as e:
+            logging.exception("Error in user_loader for user_id=%s: %s", user_id, e)
+            return None
 
     # Register Blueprints
     from routes.auth import auth_bp
@@ -76,6 +80,10 @@ def create_app(config_object=None):
 
     # Register CLI Commands
     register_commands(app)
+
+    # Apply ProxyFix for correct HTTPS / scheme handling behind reverse proxies (Vercel)
+    from werkzeug.middleware.proxy_fix import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
     return app
 
