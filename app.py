@@ -17,7 +17,16 @@ login_manager = LoginManager()
 
 def create_app(config_object=None):
     """Application Factory for CCTV Software."""
-    app = Flask(__name__)
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    static_dir = os.path.join(base_dir, 'static')
+    template_dir = os.path.join(base_dir, 'templates')
+    
+    app = Flask(
+        __name__,
+        static_folder=static_dir,
+        static_url_path='/static',
+        template_folder=template_dir
+    )
     
     # Load configuration
     if config_object is None:
@@ -88,6 +97,12 @@ def create_app(config_object=None):
         except Exception as e:
             logging.exception("Database health check failed: %s", e)
             return jsonify({"status": "error", "database": "unavailable"}), 500
+
+    # Explicit static assets serving fallback for serverless execution
+    @app.route('/static/<path:filename>')
+    def serve_static_asset(filename):
+        from flask import send_from_directory
+        return send_from_directory(static_dir, filename)
 
     # Register Error Handlers
     register_error_handlers(app)
