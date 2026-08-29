@@ -16,19 +16,29 @@ def login():
             flash('Please enter both username and password.', 'warning')
             return render_template('login.html'), 400
             
+        current_app.logger.info("[AUTH STEP 1] Login POST request received for username='%s'", username)
+        
         try:
+            current_app.logger.info("[AUTH STEP 2] Database query started for username='%s'", username)
             user = User.query.filter_by(username=username).first()
-            if user and check_password_hash(user.password, password):
-                login_user(user, remember=True)
-                next_page = request.args.get('next')
-                # Validate next_page to prevent open redirect
-                if next_page and next_page.startswith('/') and not next_page.startswith('//'):
-                    return redirect(next_page)
-                return redirect(url_for('dashboard.index'))
-                
+            current_app.logger.info("[AUTH STEP 3] Database query completed (user_found=%s)", user is not None)
+            
+            if user:
+                current_app.logger.info("[AUTH STEP 4] Password verification started")
+                is_valid = check_password_hash(user.password, password)
+                if is_valid:
+                    current_app.logger.info("[AUTH STEP 5] login_user started for user_id=%s", user.id)
+                    login_user(user, remember=True)
+                    
+                    current_app.logger.info("[AUTH STEP 6] Preparing redirect to dashboard/next")
+                    next_page = request.args.get('next')
+                    if next_page and next_page.startswith('/') and not next_page.startswith('//'):
+                        return redirect(next_page)
+                    return redirect(url_for('dashboard.index'))
+                    
             flash('Invalid username or password', 'danger')
         except Exception as e:
-            current_app.logger.exception("LOGIN DATABASE QUERY FAILED for user '%s': %s", username, e)
+            current_app.logger.exception("[AUTH ERROR] LOGIN DATABASE QUERY FAILED for user '%s': %s", username, e)
             flash('A database connection error occurred. Please check your network or credentials and try again.', 'danger')
             return render_template('login.html'), 500
             
