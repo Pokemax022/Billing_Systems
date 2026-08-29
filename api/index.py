@@ -1,3 +1,4 @@
+import os
 import sys
 from pathlib import Path
 
@@ -9,6 +10,9 @@ if str(PROJECT_ROOT) not in sys.path:
 # Import the initialized Flask application instance
 from app import app
 
-# Expose app as the WSGI callable for Vercel Python runtime
+# Expose WSGI handler aliases for all Vercel Python runtimes
+handler = app
+application = app
+
 if __name__ == '__main__':
     app.run()
