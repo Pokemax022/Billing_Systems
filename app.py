@@ -75,6 +75,20 @@ def create_app(config_object=None):
     app.register_blueprint(export_bp)
     app.register_blueprint(invoices_bp)
 
+    # Internal diagnostic route for database connectivity verification
+    @app.route('/__health/db')
+    def health_db():
+        from sqlalchemy import text
+        try:
+            with db.engine.connect() as conn:
+                res = conn.execute(text("SELECT 1")).scalar()
+                if res == 1:
+                    return jsonify({"status": "ok", "database": "connected"}), 200
+                return jsonify({"status": "error", "database": "unexpected_result"}), 500
+        except Exception as e:
+            logging.exception("Database health check failed: %s", e)
+            return jsonify({"status": "error", "database": "unavailable"}), 500
+
     # Register Error Handlers
     register_error_handlers(app)
 
