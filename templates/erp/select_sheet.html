@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Select Sheet Action</h2>
+    <a href="{{ url_for('import_erp.hub') }}" class="btn btn-outline-danger"><i class="fas fa-times"></i> Cancel Import</a>
+</div>
+
+<div class="alert alert-success shadow-sm">
+    <i class="fas fa-check-circle"></i> Workbook successfully loaded! We found {{ sheets|length }} sheets.
+</div>
+
+<form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">1. Select Target Sheet</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Which sheet would you like to process?</p>
+                    <select name="sheet" class="form-select form-select-lg mb-3" required>
+                        <option value="">-- Select Sheet --</option>
+                        {% for sheet in sheets %}
+                        <option value="{{ sheet }}">{{ sheet }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">2. Select Action</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">What does this sheet contain?</p>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="action" id="actionCust" value="customers" required>
+                        <label class="form-check-label fw-bold" for="actionCust">
+                            Import as Customers <br><small class="text-muted fw-normal">Extract Names, Mobiles, GST, Addresses.</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="action" id="actionProd" value="products" required>
+                        <label class="form-check-label fw-bold" for="actionProd">
+                            Import as Products <br><small class="text-muted fw-normal">Extract Items, HSN, Quantities, Rates. (Supports headerless sheets!)</small>
+                        </label>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="action" id="actionQuote" value="quotation" required>
+                        <label class="form-check-label fw-bold text-success" for="actionQuote">
+                            Auto-Generate Quotation <br><small class="text-muted fw-normal">Parse an Excel invoice visually, extract customer and items, and instantly build a formal Quotation & PDF.</small>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="d-grid gap-2 mb-5">
+        <button type="submit" class="btn btn-primary btn-lg shadow">Proceed to Preview <i class="fas fa-arrow-right"></i></button>
+    </div>
+</form>
+{% endblock %}

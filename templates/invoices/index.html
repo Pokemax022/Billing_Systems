@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+/* Local overrides for invoice dashboard */
+.inv-table th { font-size: .68rem; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; border: none; padding: 10px 14px; background: var(--bg-table-head) !important; }
+.inv-table td { padding: 12px 14px; vertical-align: middle; border-color: var(--border-color) !important; font-size: .88rem; color: var(--text-primary); }
+.inv-table tr:hover td { background: var(--bg-table-row-hover) !important; }
+.action-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-secondary); font-size: 13px; transition: all .2s; text-decoration: none; }
+.action-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); transform: scale(1.1); }
+.action-btn.danger:hover { border-color: #c62828; color: #c62828; }
+.filter-bar { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; }
+</style>
+
+<!-- Page Header -->
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
+    <div>
+        <h4 class="fw-bold mb-0" style="color:var(--text-primary);">
+            <i class="fas fa-file-invoice-dollar me-2" style="color:var(--accent-primary);"></i>Invoice Management
+        </h4>
+        <small style="color:var(--text-muted);">Create, manage & track customer invoices</small>
+    </div>
+    <a href="{{ url_for('invoices.create') }}" class="btn btn-primary px-4">
+        <i class="fas fa-plus me-2"></i>New Invoice
+    </a>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4 fade-in-up">
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-blue">
+            <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="card-label">Total</div>
+            <div class="card-value">{{ total_count }}</div>
+            <div class="card-sub">invoices</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-green">
+            <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="card-label">Paid</div>
+            <div class="card-value">{{ paid_count }}</div>
+            <div class="card-sub">{{ "%.0f"|format(paid_count/total_count*100) if total_count else 0 }}% of total</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-amber">
+            <div class="card-icon"><i class="fas fa-clock"></i></div>
+            <div class="card-label">Pending</div>
+            <div class="card-value">{{ pending_count + partial_count }}</div>
+            <div class="card-sub">{{ partial_count }} partial</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-red">
+            <div class="card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <div class="card-label">Overdue</div>
+            <div class="card-value">{{ overdue_count }}</div>
+            <div class="card-sub">action needed</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-teal">
+            <div class="card-icon"><i class="fas fa-rupee-sign"></i></div>
+            <div class="card-label">Revenue</div>
+            <div class="card-value" style="font-size:1.2rem;">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+            <div class="card-sub">gross billed</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-2">
+        <div class="inv-stat-card isc-purple">
+            <div class="card-icon"><i class="fas fa-hourglass-half"></i></div>
+            <div class="card-label">Outstanding</div>
+            <div class="card-value" style="font-size:1.2rem;">₹{{ "{:,.0f}".format(total_outstanding) }}</div>
+            <div class="card-sub">balance due</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar fade-in-up">
+    <form method="GET" class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label mb-1">Search</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text" style="background:var(--bg-input);border-color:var(--border-input);color:var(--text-muted);">
+                    <i class="fas fa-search"></i>
+                </span>
+                <input type="text" name="q" class="form-control form-control-sm"
+                       placeholder="Invoice no. or customer..." value="{{ q_search }}">
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">Status</label>
+            <select name="status" class="form-select form-select-sm">
+                <option value="">All Statuses</option>
+                {% for s in ['Paid','Pending','Partially Paid','Overdue','Cancelled'] %}
+                <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">From</label>
+            <input type="date" name="date_from" class="form-control form-control-sm" value="{{ date_from }}">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label mb-1">To</label>
+            <input type="date" name="date_to" class="form-control form-control-sm" value="{{ date_to }}">
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                <i class="fas fa-filter me-1"></i>Filter
+            </button>
+            <a href="{{ url_for('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i>
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Invoice Table -->
+<div class="card fade-in-up">
+    <div class="card-header d-flex justify-content-between align-items-center py-3">
+        <span style="font-size:.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);">
+            Invoices — {{ invoices|length }} result{{ 's' if invoices|length != 1 else '' }}
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table inv-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Invoice #</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Customer</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-end">Paid</th>
+                        <th class="text-end">Balance</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inv in invoices %}
+                    <tr class="{{ 'table-danger-soft' if inv.payment_status == 'Overdue' else '' }}">
+                        <td>
+                            <a href="{{ url_for('invoices.view', id=inv.id) }}"
+                               style="color:var(--accent-primary);font-weight:700;text-decoration:none;">
+                                {{ inv.invoice_number }}
+                            </a>
+                            {% if inv.reference_number %}
+                            <br><small style="color:var(--text-muted);">Ref: {{ inv.reference_number }}</small>
+                            {% endif %}
+                        </td>
+                        <td>{{ inv.date.strftime('%d %b %Y') }}</td>
+                        <td>
+                            {% if inv.due_date %}
+                                <span class="{{ 'text-danger fw-bold' if inv.is_overdue else '' }}">
+                                    {{ inv.due_date.strftime('%d %b %Y') }}
+                                    {% if inv.is_overdue %}<i class="fas fa-exclamation-circle ms-1"></i>{% endif %}
+                                </span>
+                            {% else %}
+                                <span style="color:var(--text-muted);">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ inv.customer.name if inv.customer else '<em style="color:var(--text-muted);">No customer</em>'|safe }}</td>
+                        <td class="text-end fw-bold">₹{{ "{:,.2f}".format(inv.grand_total) }}</td>
+                        <td class="text-end" style="color:#2e7d32;">₹{{ "{:,.2f}".format(inv.paid_amount) }}</td>
+                        <td class="text-end" style="color:{{ '#c62828' if inv.balance_due > 0 else '#2e7d32' }};">
+                            ₹{{ "{:,.2f}".format(inv.balance_due) }}
+                        </td>
+                        <td>
+                            {% set s = inv.payment_status %}
+                            {% if s == 'Paid' %}
+                                <span class="status-badge status-paid"><i class="fas fa-check-circle"></i>Paid</span>
+                            {% elif s == 'Pending' %}
+                                <span class="status-badge status-pending"><i class="fas fa-clock"></i>Pending</span>
+                            {% elif s == 'Partially Paid' %}
+                                <span class="status-badge status-partial"><i class="fas fa-adjust"></i>Partial</span>
+                            {% elif s == 'Overdue' %}
+                                <span class="status-badge status-overdue"><i class="fas fa-exclamation-triangle"></i>Overdue</span>
+                            {% elif s == 'Cancelled' %}
+                                <span class="status-badge status-cancelled"><i class="fas fa-ban"></i>Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a href="{{ url_for('invoices.view', id=inv.id) }}" class="action-btn" title="View">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('invoices.edit', id=inv.id) }}" class="action-btn" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{{ url_for('invoices.preview', id=inv.id) }}" class="action-btn" title="Preview" target="_blank">
+                                    <i class="fas fa-expand-alt"></i>
+                                </a>
+                                <a href="{{ url_for('invoices.download_pdf', id=inv.id) }}" class="action-btn" title="Download PDF">
+                                    <i class="fas fa-file-pdf"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('invoices.duplicate', id=inv.id) }}" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="action-btn" title="Duplicate" style="cursor:pointer;">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('invoices.delete', id=inv.id) }}" style="display:inline;"
+                                      onsubmit="return confirm('Delete invoice {{ inv.invoice_number }}? This cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="action-btn danger" title="Delete" style="cursor:pointer;">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                                <h5>No invoices found</h5>
+                                <p class="mb-3">{% if q_search or status_filter %}Try adjusting your filters.{% else %}Create your first invoice to get started.{% endif %}</p>
+                                {% if not q_search and not status_filter %}
+                                <a href="{{ url_for('invoices.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Create Invoice
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

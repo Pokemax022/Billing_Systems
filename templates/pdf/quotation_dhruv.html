@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4; margin: 0; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; color: #000; width: 210mm; padding: 10mm; }
+.main-border { border: 1px solid #000; width: 100%; }
+.tc { text-align: center; }
+.tr { text-align: right; }
+.tl { text-align: left; }
+.bold { font-weight: bold; }
+.b-bottom { border-bottom: 1px solid #000; }
+.b-right { border-right: 1px solid #000; }
+.p-2 { padding: 4px; }
+.p-1 { padding: 2px; }
+table { width: 100%; border-collapse: collapse; }
+td, th { border: 1px solid #000; padding: 4px; }
+.no-border-table td, .no-border-table th { border: none; }
+.header-title { font-size: 14pt; font-weight: bold; text-decoration: underline; margin-bottom: 5px; }
+.company-name { font-size: 16pt; font-weight: bold; }
+.items-table th { font-size: 7pt; font-weight: bold; }
+.items-table td { border-top: none; border-bottom: none; height: 18px; }
+.items-table tr.last-row td { border-bottom: 1px solid #000; }
+</style>
+</head>
+<body>
+<div class="main-border">
+    <div class="tc b-bottom p-2">
+        <div style="float:left; font-size: 7pt; font-weight:bold;">GSTIN: {{ company.gstin }}</div>
+        <div style="float:right; font-size: 7pt;">ORIGINAL FOR RECIPIENT</div>
+        <div class="header-title">TAX INVOICE</div>
+        <div class="company-name">{{ company.name }}</div>
+        <div>{{ company.address }}</div>
+        <div>MO: {{ company.mobile }}</div>
+        <div>Email: {{ company.email }}</div>
+    </div>
+    
+    <table class="no-border-table b-bottom" style="width: 100%;">
+        <tr>
+            <td style="width: 50%; vertical-align: top;" class="b-right">
+                <table class="no-border-table" style="width: 100%;">
+                    <tr><td style="width: 120px;">Invoice No.</td><td>: {{ quote.quotation_number }}</td></tr>
+                    <tr><td>Date of Invoice</td><td>: {{ quote.date.strftime('%d/%m/%Y') }}</td></tr>
+                    <tr><td>Place of Supply</td><td>: </td></tr>
+                    <tr><td>Reverse Charge</td><td>: </td></tr>
+                </table>
+            </td>
+            <td style="width: 50%; vertical-align: top;">
+                <table class="no-border-table" style="width: 100%;">
+                    <tr><td style="width: 120px;">Station</td><td>: </td></tr>
+                    <tr><td>E-Way Bill No</td><td>: </td></tr>
+                    <tr><td>Order No</td><td>: </td></tr>
+                    <tr><td>Date</td><td>: </td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="no-border-table b-bottom" style="width: 100%;">
+        <tr>
+            <td style="width: 50%; vertical-align: top;" class="b-right p-2">
+                <strong>Billed To:</strong><br><br>
+                <strong>{{ quote.customer.name if quote.customer else 'N/A' }}</strong><br>
+                {{ quote.customer.address if quote.customer else '' }}<br>
+                GSTIN NO : {{ quote.customer.gst_number if quote.customer else '' }}<br>
+                MO. {{ quote.customer.mobile if quote.customer else '' }}
+            </td>
+            <td style="width: 50%; vertical-align: top;" class="p-2">
+                <strong>Shipped To:</strong><br><br>
+                <strong>{{ quote.customer.name if quote.customer else 'N/A' }}</strong><br>
+                {{ quote.customer.address if quote.customer else '' }}<br>
+                MO. {{ quote.customer.mobile if quote.customer else '' }}
+            </td>
+        </tr>
+    </table>
+
+    <table class="items-table" style="width: 100%;">
+        <thead>
+            <tr class="b-bottom">
+                <th style="width: 5%;">S.R.</th>
+                <th style="width: 25%;">Description of Goods</th>
+                <th style="width: 10%;">HSN/SAC Code</th>
+                <th style="width: 6%;">Qty.</th>
+                <th style="width: 6%;">Unit</th>
+                <th style="width: 8%;">Price</th>
+                <th style="width: 8%;">CGST<br>Rate</th>
+                <th style="width: 8%;">CGST<br>Amount</th>
+                <th style="width: 8%;">SGST<br>Rate</th>
+                <th style="width: 8%;">SGST<br>Amount</th>
+                <th style="width: 10%;">Amount(&#8377;)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.items %}
+            {% set half_gst = item.gst_percent / 2 %}
+            {% set cgst_amt = item.taxable_value * half_gst / 100 %}
+            {% set sgst_amt = item.taxable_value * half_gst / 100 %}
+            <tr>
+                <td class="tc">{{ loop.index }}</td>
+                <td>{{ item.name }}</td>
+                <td class="tc">{{ item.hsn_code }}</td>
+                <td class="tc">{{ item.quantity }}</td>
+                <td class="tc">Nos</td>
+                <td class="tr">{{ "{:,.2f}".format(item.selling_price) }}</td>
+                <td class="tc">{{ "{:,.1f}".format(half_gst) }}%</td>
+                <td class="tr">{{ "{:,.2f}".format(cgst_amt) }}</td>
+                <td class="tc">{{ "{:,.1f}".format(half_gst) }}%</td>
+                <td class="tr">{{ "{:,.2f}".format(sgst_amt) }}</td>
+                <td class="tr">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="last-row" style="height: 60px;">
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="10" class="tr bold p-2">Add Additional Charges (Install/Transport)</td>
+                <td class="tr bold p-2">{{ "{:,.2f}".format(quote.installation_charges + quote.wiring_charges + quote.transport_charges) }}</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="tl bold p-2">Grand Total</td>
+                <td class="tc bold p-2"></td>
+                <td colspan="6" class="tr bold p-2">RS.</td>
+                <td class="tr bold p-2">{{ "{:,.2f}".format(quote.grand_total) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="p-2 b-bottom bold" style="text-transform: capitalize;">
+        {{ amount_in_words }}
+    </div>
+
+    <div class="tc b-bottom bold p-2" style="background:#f0f0f0;">
+        Bank Details
+    </div>
+    <div class="p-2 b-bottom" style="font-size: 7.5pt;">
+        BANK DETAILS : {{ company.bank_name }} A/C. {{ company.account_number }}<br>
+        BRANCH : {{ company.branch }}<br>
+        IFSC CODE : {{ company.ifsc_code }}
+    </div>
+
+    <table class="no-border-table" style="width: 100%;">
+        <tr>
+            <td style="width: 60%; vertical-align: top;" class="b-right p-2">
+                <strong>Terms & Conditions</strong><br>
+                <div style="font-size: 7pt; margin-top: 5px; white-space: pre-line;">
+                    {{ company.terms_conditions }}
+                </div>
+            </td>
+            <td style="width: 40%; vertical-align: top; position: relative; height: 100px;" class="p-2">
+                <div style="font-size: 7pt;">Receiver's Signature</div>
+                <div style="position: absolute; bottom: 10px; right: 10px; text-align: center;">
+                    <div class="bold">FOR {{ company.name }}</div>
+                    <br><br><br>
+                    <div style="font-size: 7pt;">Authorised Signatory</div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+</body>
+</html>

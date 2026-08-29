@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+
+{% block login_content %}
+<style>
+/* ── Login Page — Premium Split Screen ── */
+.login-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background: var(--bg-main);
+    overflow: hidden;
+}
+
+/* Left branding panel */
+.login-brand-panel {
+    flex: 1;
+    display: none; /* hidden on mobile, shown on md+ */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #0d1b4b 0%, #1a237e 35%, #1565c0 70%, #0d47a1 100%);
+}
+.login-brand-panel::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 80%, rgba(66,165,245,0.18) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(124,77,255,0.15) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+/* Animated floating shapes */
+.float-shape {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.08;
+    animation: floatShape 8s ease-in-out infinite;
+}
+.float-shape:nth-child(1) { width: 320px; height: 320px; background: #42a5f5; top: -80px; left: -80px; animation-delay: 0s; }
+.float-shape:nth-child(2) { width: 200px; height: 200px; background: #7c4dff; bottom: 40px; right: -40px; animation-delay: 3s; }
+.float-shape:nth-child(3) { width: 140px; height: 140px; background: #26c6da; top: 50%; left: 60%; animation-delay: 1.5s; }
+
+@keyframes floatShape {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50%       { transform: translateY(-24px) scale(1.05); }
+}
+
+.brand-content { position: relative; z-index: 1; text-align: center; color: #fff; }
+.brand-logo {
+    width: 80px; height: 80px; border-radius: 20px;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; color: #64b5f6;
+    margin: 0 auto 24px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.brand-title {
+    font-size: 2.4rem; font-weight: 900;
+    letter-spacing: 1px; margin-bottom: 12px;
+}
+.brand-subtitle {
+    font-size: 1rem; opacity: 0.75;
+    line-height: 1.6; max-width: 320px;
+}
+.brand-features {
+    list-style: none; padding: 0; margin: 32px 0 0;
+    text-align: left; display: inline-flex; flex-direction: column; gap: 12px;
+}
+.brand-features li {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 0.9rem; opacity: 0.85;
+}
+.brand-features li i {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    color: #64b5f6; font-size: 0.85rem; flex-shrink: 0;
+}
+
+/* Right form panel */
+.login-form-panel {
+    width: 100%;
+    max-width: 480px;
+    display: flex; flex-direction: column;
+    justify-content: center;
+    padding: 40px 32px;
+    background: var(--bg-main);
+}
+
+.login-form-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 40px 36px;
+    box-shadow: var(--shadow-modal);
+    animation: fadeInUp 0.45s ease both;
+}
+
+.login-heading {
+    font-size: 1.6rem; font-weight: 800;
+    color: var(--text-primary); margin-bottom: 4px;
+}
+.login-subheading {
+    font-size: 0.88rem; color: var(--text-muted);
+    margin-bottom: 28px;
+}
+
+/* Mobile brand bar (only on mobile) */
+.login-mobile-brand {
+    display: none;
+    flex-direction: column; align-items: center;
+    padding: 32px 20px 0;
+    background: linear-gradient(145deg, #1a237e, #1565c0);
+    color: #fff; text-align: center;
+    border-radius: 0 0 30px 30px;
+    margin-bottom: -20px;
+    position: relative;
+}
+.login-mobile-brand .brand-logo { margin: 0 auto 10px; width: 60px; height: 60px; font-size: 1.6rem; }
+.login-mobile-brand h3 { font-weight: 900; font-size: 1.4rem; margin-bottom: 4px; }
+.login-mobile-brand p { font-size: 0.78rem; opacity: 0.7; margin-bottom: 16px; }
+
+/* Input styling */
+.login-input-group { position: relative; margin-bottom: 18px; }
+.login-input-group label {
+    display: block; font-size: 0.82rem; font-weight: 600;
+    color: var(--text-secondary); margin-bottom: 6px;
+}
+.login-input-group .input-icon {
+    position: absolute; left: 14px;
+    top: calc(50% + 12px); transform: translateY(-50%);
+    color: var(--text-muted); font-size: 0.9rem;
+    pointer-events: none;
+}
+.login-input-group input {
+    width: 100%;
+    padding: 12px 14px 12px 40px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border-input);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+}
+.login-input-group input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.login-input-group input::placeholder { color: var(--text-muted); }
+
+/* Eye toggle */
+.pw-eye-btn {
+    position: absolute; right: 14px;
+    top: calc(50% + 12px); transform: translateY(-50%);
+    background: none; border: none;
+    color: var(--text-muted); cursor: pointer;
+    padding: 4px; font-size: 0.9rem;
+    transition: color 0.2s;
+}
+.pw-eye-btn:hover { color: var(--accent-primary); }
+
+.login-btn {
+    width: 100%; padding: 13px;
+    border-radius: 10px; border: none;
+    background: linear-gradient(135deg, #1565c0, #42a5f5);
+    color: #fff; font-weight: 700; font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer; letter-spacing: 0.5px;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 16px rgba(21,101,192,0.35);
+    position: relative; overflow: hidden;
+}
+.login-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0), rgba(255,255,255,0.15), rgba(255,255,255,0));
+    transform: translateX(-100%);
+    transition: transform 0.4s ease;
+}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(21,101,192,0.45); }
+.login-btn:hover::after { transform: translateX(100%); }
+.login-btn:active { transform: translateY(0) scale(0.98); }
+
+.login-footer-text {
+    text-align: center; margin-top: 20px;
+    font-size: 0.78rem; color: var(--text-muted);
+}
+
+/* Responsive */
+@media (min-width: 900px) {
+    .login-brand-panel { display: flex !important; }
+    .login-form-panel { padding: 40px 48px; }
+    .login-wrapper { background: var(--bg-main); }
+    .login-mobile-brand { display: none !important; }
+}
+@media (max-width: 899px) {
+    .login-wrapper { flex-direction: column; align-items: center; justify-content: flex-start; }
+    .login-mobile-brand { display: flex !important; width: 100%; }
+    .login-form-panel { max-width: 100%; padding: 28px 16px 32px; }
+    .login-form-wrap { padding: 28px 22px; border-radius: 16px; }
+}
+@media (max-width: 480px) {
+    .login-form-wrap { padding: 24px 18px; }
+    .login-heading { font-size: 1.35rem; }
+}
+</style>
+
+<div class="login-wrapper">
+    <!-- Left: Branding panel (desktop only) -->
+    <div class="login-brand-panel">
+        <div class="float-shape"></div>
+        <div class="float-shape"></div>
+        <div class="float-shape"></div>
+        <div class="brand-content">
+            <div class="brand-logo">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <div class="brand-title">CCTV Pro</div>
+            <div class="brand-subtitle">
+                Professional CCTV Quotation, Billing &amp; Internal Profit Analytics Platform
+            </div>
+            <ul class="brand-features">
+                <li>
+                    <i class="fas fa-file-invoice"></i>
+                    Smart Quotation &amp; Invoice Builder
+                </li>
+                <li>
+                    <i class="fas fa-chart-line"></i>
+                    Internal Profit Analytics
+                </li>
+                <li>
+                    <i class="fab fa-whatsapp"></i>
+                    WhatsApp Quotation Sharing
+                </li>
+                <li>
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    ERP Excel Import Hub
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Mobile brand bar -->
+    <div class="login-mobile-brand">
+        <div class="brand-logo"><i class="fas fa-shield-halved"></i></div>
+        <h3>CCTV Pro</h3>
+        <p>Professional Quotation &amp; Profit Analytics</p>
+    </div>
+
+    <!-- Right: Login form -->
+    <div class="login-form-panel">
+        <div class="login-form-wrap">
+            <div class="login-heading">Welcome back 👋</div>
+            <div class="login-subheading">Sign in to access your dashboard</div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} mb-3" style="font-size:0.85rem;">
+                            <i class="fas fa-exclamation-circle me-1"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" id="loginForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                <div class="login-input-group">
+                    <label for="login-username">Username</label>
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="login-username" name="username"
+                           placeholder="Enter your username" required autocomplete="username">
+                </div>
+
+                <div class="login-input-group">
+                    <label for="login-password">Password</label>
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="login-password" name="password"
+                           placeholder="Enter your password" required autocomplete="current-password">
+                    <button type="button" class="pw-eye-btn" id="eyeToggle" title="Show/hide password">
+                        <i class="fas fa-eye" id="eyeIcon"></i>
+                    </button>
+                </div>
+
+                <button type="submit" class="login-btn" id="loginSubmitBtn">
+                    <i class="fas fa-sign-in-alt me-2"></i> Sign In
+                </button>
+            </form>
+
+            <div class="login-footer-text">
+                <i class="fas fa-lock me-1"></i> Secured internal access · CCTV Pro v2.0
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Password eye toggle
+document.getElementById('eyeToggle').addEventListener('click', function() {
+    const pw = document.getElementById('login-password');
+    const icon = document.getElementById('eyeIcon');
+    if (pw.type === 'password') {
+        pw.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        pw.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+});
+
+// Button loading state
+document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('loginSubmitBtn');
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin me-2"></i> Signing in...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

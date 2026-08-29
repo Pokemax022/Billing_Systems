@@ -1,0 +1,911 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* ── WhatsApp Quotation Hub Styles ── */
+.badge-whatsapp-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #25D366;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+}
+
+.btn-whatsapp {
+    background-color: #25D366;
+    border-color: #25D366;
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.btn-whatsapp:hover, .btn-whatsapp:focus {
+    background-color: #20ba59;
+    border-color: #20ba59;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.35);
+}
+
+.btn-outline-whatsapp {
+    color: #25D366;
+    border-color: #25D366;
+    font-weight: 600;
+    background: transparent;
+    transition: all 0.2s ease;
+}
+.btn-outline-whatsapp:hover, .btn-outline-whatsapp:focus {
+    background-color: #25D366;
+    border-color: #25D366;
+    color: #ffffff;
+}
+
+.quote-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-table-head);
+    color: var(--accent-primary);
+    border: 1px solid var(--border-color);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.84rem;
+    text-decoration: none;
+}
+
+.cust-avatar-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #ffffff;
+    flex-shrink: 0;
+}
+.avatar-blue   { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+.avatar-green  { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+.avatar-purple { background: linear-gradient(135deg, #6a1b9a, #ab47bc); }
+.avatar-orange { background: linear-gradient(135deg, #e65100, #ffa726); }
+.avatar-teal   { background: linear-gradient(135deg, #00695c, #26a69a); }
+.avatar-pink   { background: linear-gradient(135deg, #ad1457, #ec407a); }
+
+/* Template Selector Pills */
+.template-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 2px solid var(--border-color);
+    border-radius: 10px;
+    cursor: pointer;
+    background: var(--bg-card);
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.template-pill:hover {
+    border-color: var(--accent-primary);
+    background: var(--bg-table-row-hover);
+    transform: translateY(-1px);
+}
+.template-pill.active {
+    border-color: #25D366;
+    background: rgba(37, 211, 102, 0.08);
+    box-shadow: 0 0 0 1px #25D366;
+}
+.t-icon {
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+}
+.t-title {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+.t-sub {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
+/* Preset Message Tabs */
+.msg-preset-tabs {
+    display: flex;
+    gap: 6px;
+}
+.msg-preset-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-table-head);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.msg-preset-btn:hover {
+    background: var(--bg-card-hover);
+    color: var(--text-primary);
+}
+.msg-preset-btn.active {
+    background: #25D366;
+    border-color: #25D366;
+    color: #ffffff;
+}
+
+/* Live WhatsApp Preview */
+.whatsapp-preview-box {
+    background: #e5ddd5;
+    background-image: radial-gradient(#d1c7bc 1px, transparent 1px);
+    background-size: 12px 12px;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 180px;
+    border: 1px solid var(--border-color);
+}
+[data-theme="dark"] .whatsapp-preview-box {
+    background: #0b141a;
+    background-image: radial-gradient(#1f2c34 1px, transparent 1px);
+}
+.whatsapp-bubble {
+    background: #dcf8c6;
+    color: #111b21;
+    border-radius: 8px 0px 8px 8px;
+    padding: 10px 14px;
+    max-width: 95%;
+    margin-left: auto;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.13);
+    font-size: 0.85rem;
+    position: relative;
+    word-break: break-word;
+}
+[data-theme="dark"] .whatsapp-bubble {
+    background: #005c4b;
+    color: #e9edef;
+}
+.whatsapp-pdf-attach {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.06);
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 8px;
+    border-left: 3px solid #dc3545;
+}
+[data-theme="dark"] .whatsapp-pdf-attach {
+    background: rgba(255,255,255,0.08);
+}
+.whatsapp-pdf-attach i {
+    font-size: 1.6rem;
+    color: #dc3545;
+}
+.whatsapp-pdf-name {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: inherit;
+}
+.whatsapp-pdf-size {
+    font-size: 0.7rem;
+    opacity: 0.75;
+}
+.whatsapp-bubble-time {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    font-size: 0.65rem;
+    opacity: 0.65;
+    margin-top: 4px;
+}
+.whatsapp-bubble-time i {
+    color: #53bdeb;
+}
+</style>
+
+<div class="fade-in-up">
+    <!-- Header -->
+    <div class="page-header mb-4">
+        <div class="page-header-left">
+            <div class="page-breadcrumb">
+                <a href="{{ url_for('dashboard.index') }}"><i class="fas fa-home"></i></a>
+                <span>›</span><a href="{{ url_for('quotations.index') }}">Quotations</a>
+                <span>›</span><span>WhatsApp Hub</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <span class="badge-whatsapp-pill">
+                    <i class="fab fa-whatsapp"></i> WhatsApp Web
+                </span>
+                <h4 class="page-title mb-0">WhatsApp Quotation Hub</h4>
+            </div>
+            <div class="page-subtitle">Send official quotation PDFs and itemized summaries directly to customers via WhatsApp Web.</div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap page-header-right">
+            <a href="{{ url_for('quotations.index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i> All Quotations
+            </a>
+            {% if quote %}
+            <a href="{{ url_for('quotations.view', id=quote.id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-eye me-1"></i> View Quotation
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quotation Selector Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="row align-items-center g-3">
+                <div class="col-md-3">
+                    <label class="form-label mb-0 fw-bold d-flex align-items-center gap-2">
+                        <i class="fas fa-file-invoice text-primary"></i> Select Quotation:
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <select class="form-select select-quote-dropdown" id="quoteSelector" onchange="onQuoteSelect(this.value)">
+                        {% for q in quotations %}
+                            <option value="{{ q.id }}" {% if quote and quote.id == q.id %}selected{% endif %}>
+                                {{ q.quotation_number or 'Quotation' }} — {{ (q.customer.name if (q.customer and q.customer.name) else 'No Customer') }} (₹{{ "{:,.2f}".format(q.grand_total or 0.0) }}) • {{ q.date.strftime('%d/%m/%Y') if q.date else '—' }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 text-md-end">
+                    {% if quote %}
+                    <span class="quote-chip">
+                        Active: <strong>{{ quote.quotation_number or 'Quotation' }}</strong>
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if quote %}
+    <div class="row g-4">
+        <!-- LEFT COLUMN: Customer, Phone & Template -->
+        <div class="col-lg-6">
+            <!-- Customer & Contact Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold" style="color:var(--text-primary);">
+                        <i class="fas fa-user-check me-2 text-primary"></i>Quotation &amp; Customer Details
+                    </h6>
+                    <span class="badge bg-success-subtle">
+                        ₹{{ "{:,.2f}".format(quote.grand_total or 0.0) }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <div class="text-uppercase fw-bold" style="font-size:0.7rem;letter-spacing:1px;color:var(--text-muted);">Customer Name</div>
+                            <div class="d-flex align-items-center gap-2 mt-1">
+                                <div class="cust-avatar-sm avatar-blue">
+                                    {{ (quote.customer.name[0] if (quote.customer and quote.customer.name) else 'C') | upper }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold" style="color:var(--text-primary);font-size:0.95rem;">
+                                        {{ quote.customer.name if (quote.customer and quote.customer.name) else 'Unnamed Customer' }}
+                                    </div>
+                                    {% if quote.customer and quote.customer.address %}
+                                    <div style="font-size:0.78rem;color:var(--text-muted);" class="mt-1">
+                                        <i class="fas fa-map-marker-alt me-1 text-danger"></i>{{ quote.customer.address }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="text-uppercase fw-bold" style="font-size:0.7rem;letter-spacing:1px;color:var(--text-muted);">Quotation Info</div>
+                            <div class="mt-1 d-flex flex-wrap gap-1">
+                                <span class="quote-chip">{{ quote.quotation_number or 'Quotation' }}</span>
+                                <span class="badge bg-secondary-subtle align-self-center">{{ quote.date.strftime('%d %b %Y') if quote.date else '—' }}</span>
+                            </div>
+                            <div style="font-size:0.78rem;color:var(--text-muted);" class="mt-1">
+                                <i class="fas fa-boxes me-1"></i>{{ (quote.items or [])|length }} item(s) included
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3" style="border-color:var(--border-color);">
+
+                    <!-- WhatsApp Phone Number Section -->
+                    <div class="mb-2">
+                        <label class="form-label fw-bold d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="fab fa-whatsapp text-success me-1"></i> WhatsApp Phone Number</span>
+                            {% if raw_phone %}
+                                <span class="badge bg-success-subtle font-monospace">From Quote: {{ raw_phone }}</span>
+                            {% else %}
+                                <span class="badge bg-warning-subtle"><i class="fas fa-exclamation-triangle me-1"></i>Not in quotation</span>
+                            {% endif %}
+                        </label>
+
+                        <div class="input-group">
+                            <span class="input-group-text fw-semibold" id="countryCodeDisplay">
+                                <i class="fas fa-globe me-1 text-muted"></i> +91
+                            </span>
+                            <input type="text" 
+                                   class="form-control form-control-lg font-monospace" 
+                                   id="targetPhone" 
+                                   value="{{ clean_phone }}" 
+                                   placeholder="Enter 10-digit mobile number (e.g. 9825606624)"
+                                   oninput="onPhoneChanged()">
+                        </div>
+                        
+                        <div class="form-text mt-2 d-flex justify-content-between align-items-center flex-wrap gap-1">
+                            <span id="phoneValidationStatus" class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i> Format: 10 digits (e.g. 9825606624) or with country code.
+                            </span>
+                            {% if quote.customer and quote.customer.alternate_number %}
+                            <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none" onclick="useAlternateNumber('{{ quote.customer.alternate_number }}')">
+                                Use Alt: {{ quote.customer.alternate_number }}
+                            </button>
+                            {% endif %}
+                        </div>
+
+                        {% if not raw_phone %}
+                        <div class="alert alert-warning py-2 px-3 mt-2 mb-0 d-flex align-items-center" style="font-size:0.85rem;">
+                            <i class="fas fa-info-circle me-2 flex-shrink-0"></i>
+                            <div>The selected quotation does not have a saved mobile number. Please type the recipient's phone number above to send.</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Template Selection Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold" style="color:var(--text-primary);">
+                        <i class="fas fa-file-pdf me-2 text-danger"></i>Quotation PDF Template
+                    </h6>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="previewSelectedTemplate()" title="Preview PDF in new tab">
+                            <i class="fas fa-eye me-1"></i> Preview
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="downloadSelectedTemplate()" title="Download PDF to computer">
+                            <i class="fas fa-download me-1"></i> Download
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <p class="text-secondary small mb-3">Select the PDF style that will be generated and sent with this quotation:</p>
+                    
+                    <div class="row g-2">
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'premium' %}active{% endif %}" onclick="selectPdfTemplate('premium', this)">
+                                <div class="t-icon"><i class="fas fa-star text-warning"></i></div>
+                                <div>
+                                    <div class="t-title">Premium</div>
+                                    <div class="t-sub">Modern Navy</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'classic' %}active{% endif %}" onclick="selectPdfTemplate('classic', this)">
+                                <div class="t-icon"><i class="fas fa-file-lines text-primary"></i></div>
+                                <div>
+                                    <div class="t-title">Classic</div>
+                                    <div class="t-sub">Clean &amp; Standard</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'adarsh' %}active{% endif %}" onclick="selectPdfTemplate('adarsh', this)">
+                                <div class="t-icon"><i class="fas fa-layer-group text-info"></i></div>
+                                <div>
+                                    <div class="t-title">Adarsh</div>
+                                    <div class="t-sub">Invoice Layout</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'adarsh_v2' %}active{% endif %}" onclick="selectPdfTemplate('adarsh_v2', this)">
+                                <div class="t-icon"><i class="fas fa-file-invoice text-success"></i></div>
+                                <div>
+                                    <div class="t-title">Adarsh V2</div>
+                                    <div class="t-sub">Extended Header</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'dhruv' %}active{% endif %}" onclick="selectPdfTemplate('dhruv', this)">
+                                <div class="t-icon"><i class="fas fa-compact-disc text-secondary"></i></div>
+                                <div>
+                                    <div class="t-title">Dhruv</div>
+                                    <div class="t-sub">Compact View</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <div class="template-pill {% if selected_template == 'minimal' %}active{% endif %}" onclick="selectPdfTemplate('minimal', this)">
+                                <div class="t-icon"><i class="fas fa-minus-circle" style="color:var(--text-muted);"></i></div>
+                                <div>
+                                    <div class="t-title">Minimal</div>
+                                    <div class="t-sub">Black &amp; White</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Message Composer & Send Actions -->
+        <div class="col-lg-6">
+            <!-- Message Composer Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h6 class="mb-0 fw-bold" style="color:var(--text-primary);">
+                        <i class="fas fa-comment-dots me-2 text-success"></i>WhatsApp Message Content
+                    </h6>
+                    <!-- Presets -->
+                    <div class="msg-preset-tabs">
+                        <button type="button" class="msg-preset-btn active" id="btnPresetStandard" onclick="loadPreset('standard')">Standard</button>
+                        <button type="button" class="msg-preset-btn" id="btnPresetShort" onclick="loadPreset('short')">Short</button>
+                        <button type="button" class="msg-preset-btn" id="btnPresetFollowup" onclick="loadPreset('followup')">Follow-up</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <textarea class="form-control font-monospace" 
+                                  id="messageContent" 
+                                  rows="9" 
+                                  style="font-size: 0.86rem; line-height: 1.5;"
+                                  oninput="updateChatPreview()">{{ (messages.get('standard', '') if messages else '') }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 small" style="color:var(--text-muted);">
+                        <span><i class="fas fa-magic me-1"></i> WhatsApp formatting: *bold*, _italic_, ~strikethrough~</span>
+                        <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none" onclick="copyMessageText()">
+                            <i class="fas fa-copy me-1"></i> Copy Text
+                        </button>
+                    </div>
+
+                    <!-- Live WhatsApp Preview Box -->
+                    <div class="mb-2">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="fw-bold text-uppercase" style="font-size:0.72rem;letter-spacing:1px;color:var(--text-secondary);">
+                                <i class="fab fa-whatsapp text-success me-1"></i> Customer Chat Preview
+                            </span>
+                            <span style="font-size:0.72rem;color:var(--text-muted);">Live WhatsApp rendering</span>
+                        </div>
+                        <div class="whatsapp-preview-box">
+                            <div class="whatsapp-bubble">
+                                <div class="whatsapp-pdf-attach">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div>
+                                        <div class="whatsapp-pdf-name">{{ quote.quotation_number or 'Quotation' }}_Quotation.pdf</div>
+                                        <div class="whatsapp-pdf-size">1 page • PDF document</div>
+                                    </div>
+                                </div>
+                                <div id="chatBubbleText"></div>
+                                <div class="whatsapp-bubble-time">
+                                    <span id="bubbleTime">11:30 AM</span>
+                                    <i class="fas fa-check-double"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEND ACTION CARD -->
+            <div class="card shadow border-2 border-success mb-4">
+                <div class="card-body p-4">
+                    <div class="d-grid gap-2">
+                        <!-- PRIMARY BUTTON: SEND VIA WHATSAPP WEB -->
+                        <button type="button" class="btn btn-whatsapp btn-lg py-3 fs-5 d-flex align-items-center justify-content-center gap-2" onclick="sendWhatsAppWeb()">
+                            <i class="fab fa-whatsapp fs-3"></i>
+                            <span class="fw-bold">Send via WhatsApp Web</span>
+                        </button>
+                        
+                        <div class="d-flex gap-2 mt-2 flex-wrap">
+                            <!-- SECONDARY BUTTON: WHATSAPP APP -->
+                            <button type="button" class="btn btn-outline-whatsapp flex-grow-1 py-2" onclick="sendWhatsAppApp()" title="Use WhatsApp Desktop or Mobile App">
+                                <i class="fas fa-mobile-alt me-1"></i> Open in App
+                            </button>
+                            <!-- PDF DIRECT DOWNLOAD -->
+                            <button type="button" class="btn btn-outline-secondary flex-grow-1 py-2" onclick="downloadSelectedTemplate()">
+                                <i class="fas fa-file-pdf me-1 text-danger"></i> Download PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step by step guidance -->
+                    <div class="alert alert-light border mt-3 mb-0 p-3" style="border-radius: 10px; font-size: 0.85rem; background: var(--bg-table-head) !important; color:var(--text-primary);">
+                        <h6 class="fw-bold mb-2 text-primary" style="font-size:0.9rem;">
+                            <i class="fas fa-lightbulb text-warning me-1"></i> How WhatsApp Sending Works:
+                        </h6>
+                        <ol class="mb-0 ps-3" style="line-height: 1.6; color:var(--text-secondary);">
+                            <li>Clicking <strong>Send via WhatsApp Web</strong> automatically downloads your quotation PDF.</li>
+                            <li><strong>web.whatsapp.com</strong> opens instantly in a new tab with customer's chat and pre-filled message.</li>
+                            <li>Simply <strong>drag &amp; drop the downloaded PDF</strong> into the WhatsApp chat and press send!</li>
+                        </ol>
+                    </div>
+
+                    <!-- Post-Click Guide Notification (Hidden initially) -->
+                    <div id="sentSuccessAlert" class="alert alert-success mt-3 mb-0 d-none" style="border-radius: 10px;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fas fa-check-circle fs-5 text-success mt-1"></i>
+                            <div>
+                                <strong>WhatsApp Web Opened!</strong>
+                                <p class="mb-0 small">The quotation PDF has been downloaded to your browser. You can now drag the PDF directly into the opened chat to send it.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card shadow-sm border-0 text-center py-5">
+        <div class="card-body">
+            <div class="mb-3">
+                <i class="fab fa-whatsapp text-success" style="font-size: 4rem;"></i>
+            </div>
+            <h4 style="color:var(--text-primary);">No Quotations Available</h4>
+            <p class="text-secondary">You haven't created any quotations yet. Create your first quotation to start sending via WhatsApp!</p>
+            <a href="{{ url_for('quotations.create') }}" class="btn btn-primary mt-2">
+                <i class="fas fa-plus me-1"></i> Create Quotation
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RECENT QUOTATIONS TABLE -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold" style="color:var(--text-primary);">
+                <i class="fas fa-list-alt me-2 text-primary"></i>All Quotations — Quick WhatsApp Action
+            </h6>
+            <span style="font-size:0.8rem;color:var(--text-muted);">Total: {{ quotations|length }} Quotation(s)</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table q-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Quote #</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Mobile Number</th>
+                            <th>Grand Total</th>
+                            <th class="text-end">WhatsApp Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for q in quotations %}
+                        <tr {% if quote and quote.id == q.id %}class="table-active"{% endif %}>
+                            <td>
+                                <a href="{{ url_for('quotations.whatsapp_menu', id=q.id) }}" class="quote-chip">
+                                    {{ q.quotation_number or 'Quotation' }}
+                                </a>
+                            </td>
+                            <td><span style="color:var(--text-secondary);font-size:0.85rem;">{{ q.date.strftime('%d-%m-%Y') if q.date else '—' }}</span></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="cust-avatar-sm {{ ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal'][loop.index0 % 5] }}">
+                                        {{ (q.customer.name[0] if (q.customer and q.customer.name) else 'C') | upper }}
+                                    </div>
+                                    <span class="fw-semibold" style="color:var(--text-primary);">{{ (q.customer.name if (q.customer and q.customer.name) else 'Deleted Customer') }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if q.customer and q.customer.mobile %}
+                                    <span class="badge bg-secondary-subtle font-monospace">
+                                        <i class="fas fa-phone-alt me-1 text-success"></i>{{ q.customer.mobile }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted small"><em>No Phone</em></span>
+                                {% endif %}
+                            </td>
+                            <td><strong style="color:var(--text-primary);font-variant-numeric:tabular-nums;">₹{{ "{:,.2f}".format(q.grand_total or 0.0) }}</strong></td>
+                            <td class="text-end">
+                                <a href="{{ url_for('quotations.whatsapp_menu', id=q.id) }}" class="btn btn-sm btn-outline-whatsapp">
+                                    <i class="fab fa-whatsapp me-1"></i> Select &amp; Send
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">
+                                No quotations found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Hidden Presets Storage & Controller Script -->
+<script id="whatsapp-presets" type="application/json">
+{{ (messages or {}) | tojson | safe }}
+</script>
+
+<script>
+const PRESETS = JSON.parse(document.getElementById('whatsapp-presets')?.textContent || '{}');
+
+let currentQuoteId = parseInt("{{ quote.id if quote else '' }}", 10) || null;
+let currentTemplate = "{{ selected_template or 'premium' }}";
+
+function onQuoteSelect(quoteId) {
+    if (!quoteId) return;
+    const baseUrl = "{{ url_for('quotations.whatsapp_menu') }}";
+    window.location.href = baseUrl + "?id=" + encodeURIComponent(quoteId) + "&template=" + encodeURIComponent(currentTemplate);
+}
+
+function selectPdfTemplate(templateName, pillEl) {
+    if (!templateName) return;
+    currentTemplate = templateName;
+    document.querySelectorAll('.template-pill').forEach(el => el.classList.remove('active'));
+    if (pillEl) {
+        pillEl.classList.add('active');
+    }
+    
+    // Update live preview attachment label
+    const pdfNameEl = document.querySelector('.whatsapp-pdf-name');
+    if (pdfNameEl && currentQuoteId) {
+        const quoteNum = "{{ quote.quotation_number if quote else 'Quotation' }}";
+        const templateLabel = templateName.charAt(0).toUpperCase() + templateName.slice(1);
+        pdfNameEl.textContent = quoteNum + "_" + templateLabel + ".pdf";
+    }
+}
+
+function previewSelectedTemplate() {
+    if (!currentQuoteId) {
+        alert('Please select a quotation first.');
+        return;
+    }
+    const previewUrl = '/quotations/preview/' + encodeURIComponent(currentQuoteId) + '?template=' + encodeURIComponent(currentTemplate);
+    window.open(previewUrl, '_blank');
+}
+
+function downloadSelectedTemplate() {
+    if (!currentQuoteId) {
+        alert('Please select a quotation first.');
+        return;
+    }
+    const pdfUrl = '/quotations/pdf/' + encodeURIComponent(currentQuoteId) + '?template=' + encodeURIComponent(currentTemplate);
+    window.location.href = pdfUrl;
+}
+
+function loadPreset(presetKey) {
+    const text = PRESETS[presetKey] || '';
+    const msgEl = document.getElementById('messageContent');
+    if (msgEl) {
+        msgEl.value = text;
+    }
+    
+    // Update button active state
+    ['btnPresetStandard', 'btnPresetShort', 'btnPresetFollowup'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.remove('active');
+    });
+    const activeBtn = document.getElementById('btnPreset' + presetKey.charAt(0).toUpperCase() + presetKey.slice(1));
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    updateChatPreview();
+}
+
+function cleanPhoneNumber(raw) {
+    if (!raw) return '';
+    let digits = String(raw).replace(/\D/g, '');
+    if (!digits) return '';
+    
+    // 10-digit Indian mobile number
+    if (digits.length === 10) {
+        return '91' + digits;
+    }
+    // 11 digits starting with 0 (e.g. 09825606624)
+    if (digits.length === 11 && digits.startsWith('0')) {
+        return '91' + digits.substring(1);
+    }
+    // 13 digits starting with 910
+    if (digits.length === 13 && digits.startsWith('910')) {
+        return '91' + digits.substring(3);
+    }
+    // 12 digits starting with 91 (already formatted Indian number)
+    if (digits.length === 12 && digits.startsWith('91')) {
+        return digits;
+    }
+    // Standard international number
+    return digits;
+}
+
+function onPhoneChanged() {
+    const input = document.getElementById('targetPhone');
+    if (!input) return;
+    const rawVal = input.value.trim();
+    const clean = cleanPhoneNumber(rawVal);
+    const statusEl = document.getElementById('phoneValidationStatus');
+    if (!statusEl) return;
+    
+    if (!clean) {
+        statusEl.innerHTML = '<span class="text-danger"><i class="fas fa-times-circle me-1"></i> Mobile number is required</span>';
+    } else if (clean.length < 10) {
+        statusEl.innerHTML = '<span class="text-warning"><i class="fas fa-exclamation-triangle me-1"></i> Number appears incomplete</span>';
+    } else {
+        statusEl.innerHTML = '<span class="text-success"><i class="fas fa-check-circle me-1"></i> Ready for WhatsApp: <strong>+' + clean + '</strong></span>';
+    }
+}
+
+function useAlternateNumber(altNum) {
+    const input = document.getElementById('targetPhone');
+    if (input) {
+        input.value = altNum;
+        onPhoneChanged();
+    }
+}
+
+function updateChatPreview() {
+    const msgEl = document.getElementById('messageContent');
+    if (!msgEl) return;
+    const msg = msgEl.value || '';
+    const bubble = document.getElementById('chatBubbleText');
+    if (!bubble) return;
+    
+    // Convert basic whatsapp markup for preview
+    let formatted = msg
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*([^\*\n]+?)\*/g, '<strong>$1</strong>')
+        .replace(/_([^_\n]+?)_/g, '<em>$1</em>')
+        .replace(/~([^~\n]+?)~/g, '<del>$1</del>')
+        .replace(/\n/g, '<br>');
+        
+    bubble.innerHTML = formatted || '<span class="text-muted">Type message above to preview...</span>';
+    
+    // Update timestamp
+    const now = new Date();
+    let hours = now.getHours();
+    let minutes = now.getMinutes();
+    let ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    const timeStr = hours + ':' + minutes + ' ' + ampm;
+    const timeEl = document.getElementById('bubbleTime');
+    if (timeEl) timeEl.textContent = timeStr;
+}
+
+function copyMessageText() {
+    const msgEl = document.getElementById('messageContent');
+    if (!msgEl) return;
+    const text = msgEl.value;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            if (window.showToast) {
+                window.showToast('Message copied to clipboard!', 'success');
+            } else {
+                alert('Message copied to clipboard!');
+            }
+        }).catch(err => {
+            fallbackCopyText(text);
+        });
+    } else {
+        fallbackCopyText(text);
+    }
+}
+
+function fallbackCopyText(text) {
+    const tempInput = document.createElement('textarea');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+        document.execCommand('copy');
+        if (window.showToast) {
+            window.showToast('Message copied to clipboard!', 'success');
+        } else {
+            alert('Message copied to clipboard!');
+        }
+    } catch (e) {
+        alert('Could not copy message: ' + e);
+    }
+    document.body.removeChild(tempInput);
+}
+
+function sendWhatsAppWeb() {
+    if (!currentQuoteId) {
+        alert('Please select a quotation first.');
+        return;
+    }
+    
+    const phoneInput = document.getElementById('targetPhone');
+    const cleanPhone = cleanPhoneNumber(phoneInput ? phoneInput.value : '');
+    
+    if (!cleanPhone) {
+        alert('Please enter a valid customer WhatsApp phone number.');
+        if (phoneInput) phoneInput.focus();
+        return;
+    }
+    
+    const msgEl = document.getElementById('messageContent');
+    const message = msgEl ? msgEl.value : '';
+    
+    // 1. Open WhatsApp Web first
+    const webWaUrl = 'https://web.whatsapp.com/send?phone=' + encodeURIComponent(cleanPhone) + '&text=' + encodeURIComponent(message);
+    window.open(webWaUrl, '_blank');
+    
+    // 2. Download PDF
+    const pdfUrl = '/quotations/pdf/' + encodeURIComponent(currentQuoteId) + '?template=' + encodeURIComponent(currentTemplate);
+    setTimeout(function() {
+        const dlLink = document.createElement('a');
+        dlLink.href = pdfUrl;
+        dlLink.download = '';
+        document.body.appendChild(dlLink);
+        dlLink.click();
+        document.body.removeChild(dlLink);
+    }, 300);
+    
+    // 3. Show helpful guide alert
+    const successAlert = document.getElementById('sentSuccessAlert');
+    if (successAlert) {
+        successAlert.classList.remove('d-none');
+    }
+    
+    if (window.showToast) {
+        window.showToast('Quotation PDF downloaded! Drag and drop it into WhatsApp Web.', 'success', 6000);
+    }
+}
+
+function sendWhatsAppApp() {
+    if (!currentQuoteId) {
+        alert('Please select a quotation first.');
+        return;
+    }
+    
+    const phoneInput = document.getElementById('targetPhone');
+    const cleanPhone = cleanPhoneNumber(phoneInput ? phoneInput.value : '');
+    
+    if (!cleanPhone) {
+        alert('Please enter a valid customer WhatsApp phone number.');
+        if (phoneInput) phoneInput.focus();
+        return;
+    }
+    
+    const msgEl = document.getElementById('messageContent');
+    const message = msgEl ? msgEl.value : '';
+    
+    // Open WhatsApp via api protocol
+    const appWaUrl = 'https://api.whatsapp.com/send?phone=' + encodeURIComponent(cleanPhone) + '&text=' + encodeURIComponent(message);
+    window.open(appWaUrl, '_blank');
+    
+    // Download PDF
+    const pdfUrl = '/quotations/pdf/' + encodeURIComponent(currentQuoteId) + '?template=' + encodeURIComponent(currentTemplate);
+    setTimeout(function() {
+        const dlLink = document.createElement('a');
+        dlLink.href = pdfUrl;
+        dlLink.download = '';
+        document.body.appendChild(dlLink);
+        dlLink.click();
+        document.body.removeChild(dlLink);
+    }, 300);
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateChatPreview();
+    onPhoneChanged();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Create New Quotation</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label">Select Customer</label>
+                    <select name="customer_id" id="customerSelect" class="form-select" required>
+                        <option value="">-- Select Customer --</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}">{{ c.name }} ({{ c.mobile }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <div id="customerDetails" class="alert alert-secondary d-none p-2 mb-0">
+                        <small>
+                            <i class="fas fa-map-marker-alt"></i> <span id="lblCustAddress"></span><br>
+                            <i class="fas fa-id-card"></i> GSTIN: <span id="lblCustGst"></span><br>
+                            <i class="fas fa-map"></i> State: <span id="lblCustState"></span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="border-bottom pb-2 mb-3">Products</h6>
+            <div class="table-responsive">
+                <table class="table table-bordered" id="productTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="35%">Product Search</th>
+                            <th width="10%">Qty</th>
+                            <th width="15%">Rate (₹)</th>
+                            <th width="10%">GST %</th>
+                            <th width="15%">Taxable Value</th>
+                            <th width="10%">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productBody">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <button type="button" class="btn btn-sm btn-success mb-4" id="addRowBtn">
+                <i class="fas fa-plus"></i> Add Row
+            </button>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="border-bottom pb-2 mb-3">Additional Charges</h6>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label">Rate/Point (₹)</label>
+                        <div class="col-sm-5">
+                            <input type="number" step="0.01" class="form-control charge-input" name="installation_charges" value="0" placeholder="Price per point">
+                        </div>
+                        <div class="col-sm-3">
+                            <input type="number" class="form-control" name="installation_qty" value="1" min="1" placeholder="Qty">
+                        </div>
+                        <div class="col-sm-12 mt-1">
+                            <small class="text-muted">Total = Rate &times; Qty = <strong id="instTotalHint">&20b9;0.00</strong></small>
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label">Wiring (₹)</label>
+                        <div class="col-sm-8">
+                            <input type="number" step="0.01" class="form-control charge-input" name="wiring_charges" value="0">
+                        </div>
+                    </div>
+                    <div class="mb-3 row">
+                        <label class="col-sm-4 col-form-label">Transport (₹)</label>
+                        <div class="col-sm-8">
+                            <input type="number" step="0.01" class="form-control charge-input" name="transport_charges" value="0">
+                        </div>
+                    </div>
+                    
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Notes</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Remarks</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Warranty Notes</label>
+                        <textarea class="form-control" name="warranty_notes" rows="2"></textarea>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card bg-light border-0">
+                        <div class="card-body">
+                            <h6 class="card-title border-bottom pb-2">Summary</h6>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Sub Total (Taxable):</span>
+                                <strong id="lblSubTotal">₹0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Total Tax Amount:</span>
+                                <strong id="lblTaxAmount">₹0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Extra Charges:</span>
+                                <strong id="lblExtraCharges">₹0.00</strong>
+                            </div>
+                            <hr>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="h5">Grand Total:</span>
+                                <strong class="h5 text-primary" id="lblGrandTotal">₹0.00</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3 text-muted small">
+                                <span>Est. Dealer Cost (Internal):</span>
+                                <strong id="lblDealerCost">₹0.00</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <hr>
+            <div class="text-end">
+                <a href="{{ url_for('quotations.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Quotation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Simple autocomplete for search -->
+<datalist id="productList"></datalist>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    let rowIdx = 0;
+    
+    function addRow() {
+        rowIdx++;
+        const tr = `
+        <tr id="row_${rowIdx}">
+            <td>
+                <input type="text" name="product_name[]" class="form-control product-search" list="productList" placeholder="Type product name..." autocomplete="off">
+                <input type="hidden" name="product_id[]" class="product-id">
+                <input type="hidden" class="dealer-price" value="0">
+            </td>
+            <td>
+                <input type="number" name="quantity[]" class="form-control qty-input" value="1" min="1">
+            </td>
+            <td>
+                <input type="number" step="0.01" name="selling_price[]" class="form-control price-input" value="0">
+            </td>
+            <td>
+                <input type="number" step="0.01" name="gst_percent[]" class="form-control gst-input" value="18">
+            </td>
+            <td class="align-middle text-end fw-bold">
+                <span class="row-taxable">0.00</span>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger remove-row"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>`;
+        $('#productBody').append(tr);
+        bindSearchEvents($(`#row_${rowIdx}`));
+    }
+    
+    function bindSearchEvents(row) {
+        let timer;
+        row.find('.product-search').on('keyup focus', function(event) {
+            clearTimeout(timer);
+            let input = $(this);
+            let q = input.val();
+            if (q.length >= 1 || event.type === 'focus') {
+                timer = setTimeout(() => {
+                    $.get('{{ url_for("products.api_search") }}', {q: q}, function(data) {
+                        let datalist = $('#productList');
+                        if (!datalist.length) {
+                            $('body').append('<datalist id="productList"></datalist>');
+                            datalist = $('#productList');
+                        }
+                        datalist.empty();
+                        data.results.forEach(p => {
+                            datalist.append($('<option>').val(p.text));
+                        });
+                    });
+                }, 300);
+            }
+        });
+        
+        // Let's implement an easier Select2 if we had it, but for now just auto-complete with datalist
+        // Actually since we don't have Select2 loaded, we can just use native JS.
+        // For demonstration, let's let user type and we fetch on blur to auto-fill.
+        row.find('.product-search').on('change blur', function() {
+            let val = $(this).val();
+            $.get('{{ url_for("products.api_search") }}', {q: val}, function(data) {
+                if (data.results.length > 0) {
+                    let p = data.results[0]; // pick first match
+                    row.find('.product-search').val(p.text);
+                    row.find('.product-id').val(p.id);
+                    row.find('.price-input').val(p.price);
+                    row.find('.gst-input').val(p.gst);
+                    row.find('.dealer-price').val(p.dealer_price);
+                    calculateTotals();
+                }
+            });
+        });
+        
+        row.find('.qty-input, .price-input, .gst-input').on('input change', calculateTotals);
+    }
+    
+    function calculateTotals() {
+        let subTotal = 0;
+        let taxTotal = 0;
+        let dealerTotal = 0;
+        let isInterstate = window.isInterstate || false;
+        
+        $('#productBody tr').each(function() {
+            let qty = parseFloat($(this).find('.qty-input').val()) || 0;
+            let price = parseFloat($(this).find('.price-input').val()) || 0;
+            let gst = parseFloat($(this).find('.gst-input').val()) || 0;
+            let dp = parseFloat($(this).find('.dealer-price').val()) || 0;
+            
+            let taxable = qty * price;
+            let tax = taxable * (gst / 100);
+            
+            $(this).find('.row-taxable').text(taxable.toFixed(2));
+            
+            subTotal += taxable;
+            taxTotal += tax;
+            dealerTotal += (qty * dp);
+        });
+        
+        let instRate = parseFloat($('input[name="installation_charges"]').val()) || 0;
+        let instQty  = parseFloat($('input[name="installation_qty"]').val()) || 1;
+        let inst  = instRate * instQty;
+        let wire  = parseFloat($('input[name="wiring_charges"]').val()) || 0;
+        let trans = parseFloat($('input[name="transport_charges"]').val()) || 0;
+        let extra = inst + wire + trans;
+        
+        $('#instTotalHint').text('\u20b9' + inst.toFixed(2));
+        
+        let grandTotal = subTotal + taxTotal + extra;
+        
+        $('#lblSubTotal').text('₹' + subTotal.toFixed(2));
+        $('#lblTaxAmount').text('₹' + taxTotal.toFixed(2) + (isInterstate ? " (IGST)" : " (CGST/SGST)"));
+        $('#lblExtraCharges').text('₹' + extra.toFixed(2));
+        $('#lblGrandTotal').text('₹' + grandTotal.toFixed(2));
+        $('#lblDealerCost').text('₹' + dealerTotal.toFixed(2));
+    }
+    
+    $('#customerSelect').change(function() {
+        let cid = $(this).val();
+        if(cid) {
+            $.get('/customers/api/get/' + cid, function(data) {
+                $('#lblCustAddress').text(data.address || 'N/A');
+                $('#lblCustGst').text(data.gst_number || 'N/A');
+                $('#lblCustState').text(data.state || 'N/A');
+                $('#customerDetails').removeClass('d-none');
+                
+                // Demo logic for interstate check (If company state isn't matching)
+                // In production, compare with company state. We'll set a flag.
+                window.isInterstate = (data.gst_number && !data.gst_number.startsWith('24')); // Assuming 24 is home state
+                calculateTotals();
+            });
+        } else {
+            $('#customerDetails').addClass('d-none');
+        }
+    });
+    
+    $('#addRowBtn').click(addRow);
+    $(document).on('click', '.remove-row', function() {
+        $(this).closest('tr').remove();
+        calculateTotals();
+    });
+    
+    $('.charge-input, input[name="installation_qty"]').on('input change', calculateTotals);
+    
+    // Add first row by default
+    addRow();
+});
+</script>
+{% endblock %}

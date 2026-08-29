@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+@page{size:A4;margin:0;}
+body{font-family:Arial,Helvetica,sans-serif;font-size:9pt;color:#1a1a2e;background:#fff;width:210mm;}
+.page{padding:0;}
+.tc{text-align:center;}.tr{text-align:right;}.bold{font-weight:bold;}
+
+/* TOP ACCENT — Teal/Green for Invoice (vs Blue for Quotation) */
+.top-accent{height:4px;background:linear-gradient(90deg,#004d40,#26c6da,#004d40);}
+
+/* HEADER */
+.hdr-wrap{padding:14px 20px 8px 20px;background:#fff;}
+.hdr-table{width:100%;}
+.hdr-logo-td{width:52%;vertical-align:middle;}
+.hdr-inv-td{width:48%;vertical-align:top;text-align:right;}
+.co-name-big{font-size:20pt;font-weight:bold;color:#004d40;letter-spacing:1px;vertical-align:middle;}
+.co-name-sub{font-size:10pt;font-weight:bold;color:#00838f;letter-spacing:3px;display:block;margin-top:-4px;}
+.inv-big{font-size:28pt;font-weight:bold;color:#004d40;letter-spacing:3px;line-height:1;}
+.inv-tagline{font-size:8pt;color:#888;margin-top:2px;}
+
+/* COMPANY INFO + INVOICE TABLE */
+.info-wrap{padding:10px 20px 12px 20px;background:#fff;}
+.info-table{width:100%;}
+.info-left{width:54%;vertical-align:top;}
+.info-right{width:46%;vertical-align:top;}
+.co-name-lg{font-size:15pt;font-weight:bold;color:#004d40;margin-bottom:8px;}
+.ci-row{font-size:8.5pt;color:#263238;padding:2px 0;line-height:1.8;}
+.ci-icon{color:#00838f;font-weight:bold;margin-right:5px;font-size:10pt;}
+
+/* Invoice info box */
+.ibox{border:1px solid #b0bec5;width:100%;}
+.ibox-row td{padding:6px 10px;border-bottom:1px solid #eceff1;font-size:8.5pt;vertical-align:middle;}
+.ibox-row:last-child td{border-bottom:none;}
+.ibox-icon{width:24px;text-align:center;color:#00838f;}
+.ibox-label{color:#546e7a;width:50%;}
+.ibox-val{font-weight:bold;color:#004d40;}
+.ibox-val-teal{font-weight:bold;color:#00838f;}
+
+/* Divider */
+.divider{height:2px;background:#00838f;margin:0 20px;}
+
+/* STATUS BADGE */
+.status-chip{display:inline-block;padding:3px 12px;border-radius:20px;font-size:7.5pt;font-weight:bold;letter-spacing:.5px;}
+.status-paid{background:#e8f5e9;color:#2e7d32;}
+.status-pending{background:#fff8e1;color:#f57f17;}
+.status-partial{background:#e3f2fd;color:#1565c0;}
+.status-overdue{background:#ffebee;color:#c62828;}
+
+/* CUSTOMER SECTION */
+.cust-wrap{margin:8px 20px 0 20px;}
+.cust-table{width:100%;}
+.cust-bill-td{width:50%;vertical-align:top;padding-right:10px;}
+.cust-hdr{background:#004d40;color:#fff;padding:7px 12px;font-size:8.5pt;font-weight:bold;letter-spacing:1.5px;text-transform:uppercase;}
+.cust-body{border:1px solid #b0bec5;border-top:none;padding:10px 14px;min-height:70px;}
+.cust-name{font-size:10pt;font-weight:bold;color:#004d40;margin-bottom:4px;}
+.cust-info{font-size:8pt;color:#37474f;line-height:1.8;}
+.cust-gst{font-size:8pt;color:#00838f;font-weight:bold;margin-top:4px;}
+
+/* ITEMS TABLE */
+.prod-wrap{margin:10px 20px 0 20px;}
+.prod-table{width:100%;border-collapse:collapse;}
+.prod-table thead tr{background:#004d40;}
+.prod-table th{padding:8px 7px;font-size:7.5pt;font-weight:bold;color:#fff;text-transform:uppercase;border-right:1px solid rgba(255,255,255,0.2);}
+.prod-table th:last-child{border-right:none;}
+.prod-table tbody tr{border-bottom:1px solid #e0f2f1;}
+.prod-table tbody tr:nth-child(even){background:#f1fffe;}
+.prod-table td{padding:8px 7px;font-size:8.5pt;color:#263238;border-right:1px solid #e0f2f1;}
+.prod-table td:last-child{border-right:none;}
+
+/* TOTALS */
+.totals-wrap{margin:8px 20px 0 20px;}
+.totals-outer{width:100%;}
+.totals-left{width:46%;vertical-align:top;padding-right:10px;}
+.totals-right{width:54%;vertical-align:top;}
+.aw-box{border:1.5px solid #00838f;overflow:hidden;}
+.aw-hdr{background:#00838f;color:#fff;padding:6px 10px;font-size:7.5pt;font-weight:bold;letter-spacing:1px;text-transform:uppercase;}
+.aw-body{padding:10px 12px;font-size:9pt;font-weight:bold;color:#004d40;line-height:1.5;min-height:40px;}
+.tot-table{width:100%;border-collapse:collapse;}
+.tot-table td{padding:6px 8px;font-size:8.5pt;}
+.tot-label{color:#37474f;}
+.tot-val{text-align:right;font-weight:bold;color:#004d40;}
+.tot-row-normal{border-bottom:1px solid #eceff1;}
+.tot-row-tax{background:#f1fffe;border-bottom:1px solid #eceff1;}
+.tot-row-discount{background:#fff8e1;border-bottom:1px solid #eceff1;}
+.tot-grand{background:#004d40;}
+.tot-grand td{color:#fff !important;font-size:10pt;font-weight:bold;padding:9px 8px;}
+
+/* PAYMENT STATUS SECTION */
+.pmt-wrap{margin:8px 20px 0 20px;border:1px solid #b0bec5;}
+.pmt-table{width:100%;}
+.pmt-hdr{background:#e8f5e9;padding:7px 12px;font-size:8pt;font-weight:bold;color:#2e7d32;border-bottom:1px solid #c8e6c9;}
+.pmt-body td{padding:7px 12px;font-size:8.5pt;color:#37474f;border-right:1px solid #eceff1;}
+.pmt-body td:last-child{border-right:none;}
+.pmt-label{font-size:7.5pt;color:#78909c;text-transform:uppercase;letter-spacing:.5px;}
+.pmt-val{font-size:9pt;font-weight:bold;color:#004d40;}
+.balance-cell{background:#ffebee;}
+.balance-cell .pmt-val{color:#c62828;}
+
+/* QR + BANK */
+.qrbank-wrap{margin:8px 20px 0 20px;border:1px solid #b0bec5;}
+.qrbank-table{width:100%;}
+.qr-td{width:22%;padding:10px;border-right:1px solid #b0bec5;text-align:center;vertical-align:middle;}
+.bank-td{padding:10px 14px;vertical-align:top;}
+.bank-hdr{font-size:7.5pt;font-weight:bold;color:#004d40;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.bank-row{font-size:8pt;color:#37474f;line-height:1.9;}
+.bank-label{color:#78909c;width:90px;display:inline-block;}
+.bank-val{font-weight:bold;color:#263238;}
+
+/* FOOTER */
+.footer-wrap{margin:8px 20px 0 20px;border:1px solid #b0bec5;}
+.footer-hdr{background:#004d40;color:#fff;padding:6px 12px;font-size:7.5pt;font-weight:bold;letter-spacing:1px;text-transform:uppercase;}
+.footer-body{padding:8px 12px;font-size:7.5pt;color:#37474f;line-height:1.7;}
+.sig-wrap{margin:8px 20px 8px 20px;text-align:right;}
+.sig-box{display:inline-block;border-top:1.5px solid #004d40;padding-top:4px;min-width:150px;text-align:center;font-size:7.5pt;font-weight:bold;color:#004d40;}
+
+/* Bottom accent */
+.bottom-accent{height:4px;background:linear-gradient(90deg,#004d40,#26c6da,#004d40);margin-top:auto;}
+.thank-you{text-align:center;font-size:8pt;color:#78909c;padding:5px;letter-spacing:2px;text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- Top accent -->
+<div class="top-accent"></div>
+
+<!-- HEADER: Company + INVOICE title -->
+<div class="hdr-wrap">
+    <table class="hdr-table">
+        <tr>
+            <td class="hdr-logo-td">
+                <!-- Shield icon inline SVG (consistent with quotation branding) -->
+                <svg width="38" height="38" viewBox="0 0 44 50" style="vertical-align:middle;margin-right:10px;">
+                    <path d="M22 2 L42 10 L42 24 C42 36 32 46 22 50 C12 46 2 36 2 24 L2 10 Z" fill="#004d40"/>
+                    <path d="M16 25 L20 29 L28 21" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="co-name-big">{{ company.name if company else 'Company Name' }}</span>
+            </td>
+            <td class="hdr-inv-td">
+                <div class="inv-big">INVOICE</div>
+                <div class="inv-tagline">#{{ inv.invoice_number }}</div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- Company Info + Invoice Details -->
+<div class="info-wrap">
+    <table class="info-table">
+        <tr>
+            <td class="info-left">
+                {% if company %}
+                <div class="ci-row"><span class="ci-icon">📍</span>{{ company.address or '' }}</div>
+                <div class="ci-row"><span class="ci-icon">📞</span>{{ company.mobile or '' }}</div>
+                <div class="ci-row"><span class="ci-icon">✉</span>{{ company.email or '' }}</div>
+                {% if company.gstin %}
+                <div class="ci-row"><span class="ci-icon">🔑</span>GSTIN: <strong>{{ company.gstin }}</strong></div>
+                {% endif %}
+                {% endif %}
+            </td>
+            <td class="info-right">
+                <table class="ibox">
+                    <tr class="ibox-row">
+                        <td class="ibox-icon">📄</td>
+                        <td class="ibox-label">Invoice No.</td>
+                        <td class="ibox-val ibox-val-teal">{{ inv.invoice_number }}</td>
+                    </tr>
+                    <tr class="ibox-row">
+                        <td class="ibox-icon">📅</td>
+                        <td class="ibox-label">Invoice Date</td>
+                        <td class="ibox-val">{{ inv.date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% if inv.due_date %}
+                    <tr class="ibox-row">
+                        <td class="ibox-icon">⏰</td>
+                        <td class="ibox-label">Due Date</td>
+                        <td class="ibox-val" style="color:{% if inv.is_overdue %}#c62828{% else %}#004d40{% endif %};">{{ inv.due_date.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if inv.reference_number %}
+                    <tr class="ibox-row">
+                        <td class="ibox-icon">🔗</td>
+                        <td class="ibox-label">Reference</td>
+                        <td class="ibox-val">{{ inv.reference_number }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="ibox-row">
+                        <td class="ibox-icon">✅</td>
+                        <td class="ibox-label">Status</td>
+                        <td>
+                            {% set s = inv.payment_status %}
+                            {% if s == 'Paid' %}
+                                <span class="status-chip status-paid">● PAID</span>
+                            {% elif s == 'Partially Paid' %}
+                                <span class="status-chip status-partial">◑ PARTIAL</span>
+                            {% elif s == 'Overdue' %}
+                                <span class="status-chip status-overdue">⚠ OVERDUE</span>
+                            {% elif s == 'Cancelled' %}
+                                <span class="status-chip" style="background:#f5f5f5;color:#616161;">✕ CANCELLED</span>
+                            {% else %}
+                                <span class="status-chip status-pending">○ PENDING</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="divider"></div>
+
+<!-- CUSTOMER SECTION -->
+<div class="cust-wrap">
+    <table class="cust-table">
+        <tr>
+            <td class="cust-bill-td">
+                <div class="cust-hdr">▶ Bill To</div>
+                <div class="cust-body">
+                    {% if inv.customer %}
+                    <div class="cust-name">{{ inv.customer.name }}</div>
+                    <div class="cust-info">
+                        {% if inv.customer.address %}{{ inv.customer.address }}<br>{% endif %}
+                        {% if inv.customer.city or inv.customer.state %}{{ [inv.customer.city, inv.customer.state, inv.customer.pin_code]|select|join(', ') }}<br>{% endif %}
+                        {% if inv.customer.mobile %}📞 {{ inv.customer.mobile }}<br>{% endif %}
+                        {% if inv.customer.email %}✉ {{ inv.customer.email }}{% endif %}
+                    </div>
+                    {% if inv.customer.gst_number %}
+                    <div class="cust-gst">GSTIN: {{ inv.customer.gst_number }}</div>
+                    {% endif %}
+                    {% else %}
+                    <div class="cust-info" style="color:#9e9e9e;">No customer linked</div>
+                    {% endif %}
+                </div>
+            </td>
+            <td class="cust-bill-td">
+                <div class="cust-hdr" style="background:#263238;">▶ From</div>
+                <div class="cust-body">
+                    {% if company %}
+                    <div class="cust-name" style="color:#263238;">{{ company.name }}</div>
+                    <div class="cust-info">
+                        {% if company.address %}{{ company.address }}<br>{% endif %}
+                        {% if company.mobile %}📞 {{ company.mobile }}<br>{% endif %}
+                        {% if company.email %}✉ {{ company.email }}{% endif %}
+                    </div>
+                    {% if company.gstin %}
+                    <div class="cust-gst" style="color:#263238;">GSTIN: {{ company.gstin }}</div>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- ITEMS TABLE -->
+<div class="prod-wrap">
+    <table class="prod-table">
+        <thead>
+            <tr>
+                <th style="width:4%;">#</th>
+                <th style="width:26%;">Item / Service</th>
+                <th style="width:8%;">HSN</th>
+                <th style="width:6%;text-align:right;">Qty</th>
+                <th style="width:10%;text-align:right;">Rate (₹)</th>
+                <th style="width:7%;text-align:right;">Disc%</th>
+                <th style="width:10%;text-align:right;">Taxable (₹)</th>
+                <th style="width:7%;text-align:right;">GST%</th>
+                <th style="width:10%;text-align:right;">Tax (₹)</th>
+                <th style="width:12%;text-align:right;">Total (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in inv.items %}
+            <tr>
+                <td class="tc">{{ loop.index }}</td>
+                <td>
+                    <strong>{{ item.name }}</strong>
+                    {% if item.description %}<br><span style="font-size:7.5pt;color:#78909c;">{{ item.description }}</span>{% endif %}
+                </td>
+                <td>{{ item.hsn_code or '—' }}</td>
+                <td class="tr">{{ item.quantity }}</td>
+                <td class="tr">{{ "{:,.2f}".format(item.unit_price) }}</td>
+                <td class="tr">{{ item.discount_percent }}%</td>
+                <td class="tr">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+                <td class="tr">{{ item.gst_percent }}%</td>
+                <td class="tr">{{ "{:,.2f}".format(item.tax_amount) }}</td>
+                <td class="tr bold">{{ "{:,.2f}".format(item.line_total) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Additional charges row -->
+{% if inv.installation_charges > 0 or inv.wiring_charges > 0 or inv.transport_charges > 0 %}
+<div style="margin:0 20px;background:#e0f7fa;border:1px solid #80deea;border-top:none;padding:7px 12px;">
+    <table style="width:100%;">
+        <tr>
+            <td style="font-size:8.5pt;font-weight:bold;color:#004d40;">Additional Charges</td>
+            {% if inv.installation_charges > 0 %}
+            <td style="font-size:8.5pt;color:#37474f;">Installation: ₹{{ "{:,.2f}".format(inv.installation_charges) }}</td>
+            {% endif %}
+            {% if inv.wiring_charges > 0 %}
+            <td style="font-size:8.5pt;color:#37474f;">Wiring: ₹{{ "{:,.2f}".format(inv.wiring_charges) }}</td>
+            {% endif %}
+            {% if inv.transport_charges > 0 %}
+            <td style="font-size:8.5pt;color:#37474f;">Transport: ₹{{ "{:,.2f}".format(inv.transport_charges) }}</td>
+            {% endif %}
+            <td style="text-align:right;font-weight:bold;font-size:8.5pt;color:#004d40;">
+                Total: ₹{{ "{:,.2f}".format(inv.installation_charges + inv.wiring_charges + inv.transport_charges) }}
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+<!-- TOTALS -->
+<div class="totals-wrap">
+    <table class="totals-outer">
+        <tr>
+            <td class="totals-left">
+                <div class="aw-box">
+                    <div class="aw-hdr">&#128196; Amount in Words</div>
+                    <div class="aw-body">{{ amount_in_words }}</div>
+                </div>
+            </td>
+            <td class="totals-right">
+                <table class="tot-table">
+                    <tr class="tot-row-normal">
+                        <td class="tot-label">Sub Total (Taxable)</td>
+                        <td class="tot-val">₹{{ "{:,.2f}".format(inv.sub_total) }}</td>
+                    </tr>
+                    {% if inv.cgst_total > 0 %}
+                    <tr class="tot-row-tax">
+                        <td class="tot-label">CGST</td>
+                        <td class="tot-val">₹{{ "{:,.2f}".format(inv.cgst_total) }}</td>
+                    </tr>
+                    <tr class="tot-row-tax">
+                        <td class="tot-label">SGST</td>
+                        <td class="tot-val">₹{{ "{:,.2f}".format(inv.sgst_total) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if inv.igst_total > 0 %}
+                    <tr class="tot-row-tax">
+                        <td class="tot-label">IGST</td>
+                        <td class="tot-val">₹{{ "{:,.2f}".format(inv.igst_total) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if inv.installation_charges > 0 or inv.wiring_charges > 0 or inv.transport_charges > 0 %}
+                    <tr class="tot-row-normal">
+                        <td class="tot-label">Extra Charges</td>
+                        <td class="tot-val">₹{{ "{:,.2f}".format(inv.installation_charges + inv.wiring_charges + inv.transport_charges) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if inv.discount_amount > 0 %}
+                    <tr class="tot-row-discount">
+                        <td class="tot-label" style="color:#c62828;">Discount ({{ inv.discount_value }}{{ '%' if inv.discount_type == 'percent' else '₹' }})</td>
+                        <td class="tot-val" style="color:#c62828;">-₹{{ "{:,.2f}".format(inv.discount_amount) }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="tot-grand">
+                        <td><strong>GRAND TOTAL</strong></td>
+                        <td class="tr"><strong>₹{{ "{:,.2f}".format(inv.grand_total) }}</strong></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- PAYMENT STATUS -->
+<div class="pmt-wrap">
+    <div class="pmt-hdr">Payment Summary</div>
+    <table class="pmt-table">
+        <tr class="pmt-body">
+            <td>
+                <div class="pmt-label">Grand Total</div>
+                <div class="pmt-val">₹{{ "{:,.2f}".format(inv.grand_total) }}</div>
+            </td>
+            <td>
+                <div class="pmt-label">Amount Paid</div>
+                <div class="pmt-val" style="color:#2e7d32;">₹{{ "{:,.2f}".format(inv.paid_amount) }}</div>
+            </td>
+            <td class="{{ 'balance-cell' if inv.balance_due > 0 else '' }}">
+                <div class="pmt-label">Balance Due</div>
+                <div class="pmt-val">₹{{ "{:,.2f}".format(inv.balance_due) }}</div>
+            </td>
+            <td>
+                <div class="pmt-label">Payment Method</div>
+                <div class="pmt-val" style="font-size:8pt;">{{ inv.payment_method or '—' }}</div>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<!-- QR + BANK -->
+{% if company %}
+<div class="qrbank-wrap">
+    <table class="qrbank-table">
+        <tr>
+            <td class="qr-td">
+                <img src="{{ qr_data_uri }}" width="80" height="80" alt="UPI QR">
+                <div style="font-size:7pt;color:#78909c;margin-top:4px;">Scan to Pay</div>
+            </td>
+            <td class="bank-td">
+                <div class="bank-hdr">Bank Details</div>
+                {% if company.bank_name %}
+                <div class="bank-row"><span class="bank-label">Bank:</span><span class="bank-val">{{ company.bank_name }}</span></div>
+                {% endif %}
+                {% if company.account_number %}
+                <div class="bank-row"><span class="bank-label">A/C No.:</span><span class="bank-val">{{ company.account_number }}</span></div>
+                {% endif %}
+                {% if company.ifsc_code %}
+                <div class="bank-row"><span class="bank-label">IFSC:</span><span class="bank-val">{{ company.ifsc_code }}</span></div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+<!-- TERMS & FOOTER -->
+{% if inv.notes or inv.terms_conditions %}
+<div class="footer-wrap">
+    <div class="footer-hdr">Notes & Terms</div>
+    <div class="footer-body">
+        {% if inv.notes %}<strong>Notes:</strong> {{ inv.notes }}<br>{% endif %}
+        {% if inv.terms_conditions %}
+        {% for line in inv.terms_conditions.split('\n') %}{{ loop.index }}. {{ line.lstrip('0123456789. ') }}<br>{% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Signature -->
+<div class="sig-wrap">
+    <div class="sig-box">
+        <br><br><br>
+        Authorised Signatory<br>
+        <span style="font-size:7pt;color:#00838f;">{{ company.name if company else '' }}</span>
+    </div>
+</div>
+
+<!-- Thank you -->
+<div class="thank-you">Thank You For Your Business</div>
+<div class="bottom-accent"></div>
+
+</div><!-- .page -->
+</body>
+</html>

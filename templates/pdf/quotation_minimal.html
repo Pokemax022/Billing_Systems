@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4; margin: 0; }
+body { font-family: Arial, Helvetica, sans-serif; font-size: 9pt; color: #222; background: #fff; width: 210mm; }
+.page { padding: 20mm 18mm; }
+.company-name { font-size: 26pt; font-weight: bold; letter-spacing: 2px; color: #111; border-bottom: 3px solid #111; padding-bottom: 6px; margin-bottom: 4px; }
+.doc-title { font-size: 14pt; font-weight: bold; letter-spacing: 4px; color: #444; margin-bottom: 14px; }
+.meta-table { width: 100%; margin-bottom: 16px; }
+.meta-table td { font-size: 8.5pt; padding: 2px 0; color: #555; }
+.meta-table td:last-child { text-align: right; font-weight: bold; color: #111; }
+.customer-box { border: 1px solid #ccc; padding: 10px 14px; margin-bottom: 14px; }
+.customer-box .lbl { font-size: 7pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; color: #777; margin-bottom: 5px; }
+.customer-box .cname { font-size: 12pt; font-weight: bold; color: #111; }
+.customer-box .cdetail { font-size: 8.5pt; color: #555; margin-top: 3px; line-height: 1.7; }
+.items-table { width: 100%; border-collapse: collapse; margin-bottom: 14px; font-size: 8.5pt; }
+.items-table th { background: #111; color: #fff; padding: 8px 6px; font-weight: bold; font-size: 7.5pt; text-transform: uppercase; }
+.items-table td { padding: 8px 6px; border-bottom: 1px solid #ddd; }
+.items-table tbody tr:nth-child(even) { background: #f9f9f9; }
+.totals-table { width: 220px; float: right; border-collapse: collapse; font-size: 8.5pt; }
+.totals-table td { padding: 6px 8px; border-bottom: 1px solid #eee; }
+.totals-table td:last-child { text-align: right; font-weight: bold; }
+.totals-table .grand td { background: #111; color: #fff; font-size: 10pt; border: none; padding: 9px 8px; }
+.words-box { background: #f9f9f9; border: 1px solid #ddd; padding: 9px 12px; margin-bottom: 12px; font-size: 8.5pt; }
+.words-box .wl { font-size: 7pt; font-weight: bold; text-transform: uppercase; color: #777; margin-bottom: 3px; }
+.sig-section { border-top: 1px solid #ccc; margin-top: 20px; padding-top: 12px; }
+.sig-right { float: right; text-align: center; }
+.sig-line { border-top: 1px solid #111; width: 130px; margin: 36px 0 5px 0; }
+.sig-label { font-size: 8pt; font-weight: bold; }
+.sig-sub { font-size: 7.5pt; color: #777; }
+.terms-text { font-size: 7.5pt; color: #777; line-height: 1.7; }
+.tc { text-align: center; }
+.tr { text-align: right; }
+.clearfix::after { content: ""; display: table; clear: both; }
+</style>
+</head>
+<body>
+<div class="page">
+
+    <!-- Company Name Only -->
+    <div class="company-name">{{ company.name }}</div>
+    <div class="doc-title">QUOTATION</div>
+
+    <table class="meta-table" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="width:50%;vertical-align:top;font-size:8pt;color:#555;line-height:1.8;">
+                {{ company.address }}<br>
+                Ph: {{ company.mobile }}<br>
+                GSTIN: {{ company.gstin }}
+            </td>
+            <td style="width:50%;vertical-align:top;text-align:right;">
+                <table style="width:100%;" cellpadding="0" cellspacing="0">
+                    <tr><td style="text-align:left;color:#777;">Quote No.</td><td>{{ quote.quotation_number }}</td></tr>
+                    <tr><td style="text-align:left;color:#777;">Date</td><td>{{ quote.date.strftime('%d/%m/%Y') }}</td></tr>
+                    <tr><td style="text-align:left;color:#777;">Valid For</td><td>30 Days</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Customer -->
+    <div class="customer-box">
+        <div class="lbl">Customer Details</div>
+        <div class="cname">{{ quote.customer.name if quote.customer else 'N/A' }}</div>
+        <div class="cdetail">
+            {% if quote.customer and quote.customer.address %}Address: {{ quote.customer.address }}<br>{% endif %}
+            Mobile: {{ quote.customer.mobile if quote.customer else '' }}
+            {% if quote.customer and quote.customer.gst_number %}&nbsp; | &nbsp;GSTIN: {{ quote.customer.gst_number }}{% endif %}
+        </div>
+    </div>
+
+    <!-- Products -->
+    <table class="items-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th class="tc" style="width:5%;">SR</th>
+                <th style="width:40%;">Product / Description</th>
+                <th class="tc" style="width:12%;">HSN</th>
+                <th class="tc" style="width:7%;">Qty</th>
+                <th class="tr" style="width:13%;">Rate (&#8377;)</th>
+                <th class="tc" style="width:7%;">GST%</th>
+                <th class="tr" style="width:16%;">Value (&#8377;)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.items %}
+            <tr>
+                <td class="tc">{{ loop.index }}</td>
+                <td style="font-weight:bold;">{{ item.name }}</td>
+                <td class="tc">{{ item.hsn_code or '-' }}</td>
+                <td class="tc">{{ item.quantity }}</td>
+                <td class="tr">{{ "{:,.2f}".format(item.selling_price) }}</td>
+                <td class="tc">{{ item.gst_percent|int }}%</td>
+                <td class="tr" style="font-weight:bold;">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Charges -->
+    {% if quote.installation_charges > 0 or quote.wiring_charges > 0 or quote.transport_charges > 0 %}
+    <table style="width:100%;font-size:8.5pt;margin-bottom:12px;" cellpadding="0" cellspacing="0">
+        {% if quote.installation_charges > 0 %}
+        <tr>
+            <td style="padding:4px 6px;color:#555;">Installation Charges ({{ quote.installation_qty or 1 }} pts @ &#8377;{{ "{:,.2f}".format(quote.installation_rate or 0) }})</td>
+            <td class="tr" style="padding:4px 6px;font-weight:bold;">&#8377; {{ "{:,.2f}".format(quote.installation_charges) }}</td>
+        </tr>
+        {% endif %}
+        {% if quote.wiring_charges > 0 %}
+        <tr><td style="padding:4px 6px;color:#555;">Wiring Charges</td><td class="tr" style="padding:4px 6px;font-weight:bold;">&#8377; {{ "{:,.2f}".format(quote.wiring_charges) }}</td></tr>
+        {% endif %}
+        {% if quote.transport_charges > 0 %}
+        <tr><td style="padding:4px 6px;color:#555;">Transport Charges</td><td class="tr" style="padding:4px 6px;font-weight:bold;">&#8377; {{ "{:,.2f}".format(quote.transport_charges) }}</td></tr>
+        {% endif %}
+    </table>
+    {% endif %}
+
+    <!-- Amount words + Totals -->
+    <table style="width:100%;margin-bottom:14px;" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="width:50%;vertical-align:top;padding-right:12px;">
+                <div class="words-box">
+                    <div class="wl">Total Amount in Words</div>
+                    {{ amount_in_words }}
+                </div>
+                <div style="margin-top:10px;font-size:8pt;color:#555;">
+                    <strong>Bank:</strong> {{ company.bank_name }}<br>
+                    <strong>A/c:</strong> {{ company.account_number }}<br>
+                    <strong>IFSC:</strong> {{ company.ifsc_code }}
+                </div>
+                {% if qr_data_uri %}
+                <div style="margin-top:8px;text-align:center;">
+                    <img src="{{ qr_data_uri }}" style="width:65px;height:65px;">
+                    <div style="font-size:7pt;color:#777;margin-top:2px;">Scan to Pay</div>
+                </div>
+                {% endif %}
+            </td>
+            <td style="width:50%;vertical-align:top;text-align:right;">
+                <table class="totals-table" cellpadding="0" cellspacing="0">
+                    <tr><td style="text-align:left;color:#555;">Subtotal</td><td>&#8377; {{ "{:,.2f}".format(quote.sub_total) }}</td></tr>
+                    {% if quote.cgst_total > 0 %}<tr><td style="text-align:left;color:#555;">CGST</td><td>&#8377; {{ "{:,.2f}".format(quote.cgst_total) }}</td></tr>{% endif %}
+                    {% if quote.sgst_total > 0 %}<tr><td style="text-align:left;color:#555;">SGST</td><td>&#8377; {{ "{:,.2f}".format(quote.sgst_total) }}</td></tr>{% endif %}
+                    {% if quote.igst_total > 0 %}<tr><td style="text-align:left;color:#555;">IGST</td><td>&#8377; {{ "{:,.2f}".format(quote.igst_total) }}</td></tr>{% endif %}
+                    <tr class="grand"><td>GRAND TOTAL</td><td style="text-align:right;">&#8377; {{ "{:,.2f}".format(quote.grand_total) }}</td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Signature + Terms -->
+    <div class="sig-section">
+        <div class="sig-right">
+            <div class="sig-line"></div>
+            <div class="sig-label">For, {{ company.name }}</div>
+            <div class="sig-sub">Authorised Signatory</div>
+        </div>
+        {% if company.terms_conditions %}
+        <div class="terms-text" style="max-width:65%;white-space:pre-line;">
+            <strong>Terms &amp; Conditions:</strong><br>{{ company.terms_conditions }}
+        </div>
+        {% endif %}
+        <div class="clearfix"></div>
+    </div>
+
+</div>
+</body>
+</html>

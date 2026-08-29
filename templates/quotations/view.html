@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Quotation #{{ quote.quotation_number }}</h2>
+    <div>
+        <a href="{{ url_for('quotations.whatsapp_menu', id=quote.id) }}" class="btn btn-whatsapp me-2"><i class="fab fa-whatsapp me-1"></i> Send via WhatsApp</a>
+        <a href="{{ url_for('quotations.edit', id=quote.id) }}" class="btn btn-outline-primary me-2"><i class="fas fa-edit"></i> Edit</a>
+        <a href="{{ url_for('quotations.select_template', id=quote.id) }}" class="btn btn-danger me-2"><i class="fas fa-file-pdf"></i> Download PDF</a>
+        <a href="{{ url_for('quotations.index') }}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <h6 class="mb-3">To:</h6>
+                {% if quote.customer %}
+                <div><strong>{{ quote.customer.name }}</strong></div>
+                <div>{{ quote.customer.address or '' }}</div>
+                <div>Phone: {{ quote.customer.mobile or 'N/A' }}</div>
+                {% if quote.customer.gst_number %}
+                <div>GSTIN: {{ quote.customer.gst_number }}</div>
+                {% endif %}
+                {% else %}
+                <div class="text-muted"><em>Customer data deleted</em></div>
+                {% endif %}
+            </div>
+            <div class="col-sm-6 text-sm-end">
+                <h6 class="mb-3">Details:</h6>
+                <div><strong>Date:</strong> {{ quote.date.strftime('%d/%m/%Y') }}</div>
+                <div><strong>Status:</strong> Generated</div>
+            </div>
+        </div>
+
+        <div class="table-responsive-sm">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th class="center">#</th>
+                        <th>Item</th>
+                        <th>HSN</th>
+                        <th class="center">Qty</th>
+                        <th class="right">Unit Cost</th>
+                        <th class="right">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in quote.items %}
+                    <tr>
+                        <td class="center">{{ loop.index }}</td>
+                        <td class="left">{{ item.name }}</td>
+                        <td class="left">{{ item.hsn_code }}</td>
+                        <td class="center">{{ item.quantity }}</td>
+                        <td class="right">₹{{ "{:,.2f}".format(item.selling_price) }}</td>
+                        <td class="right">₹{{ "{:,.2f}".format(item.taxable_value) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-sm-5">
+                <!-- Notes -->
+                {% if quote.notes %}
+                <div class="mt-4">
+                    <strong>Notes:</strong>
+                    <p class="text-muted">{{ quote.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-lg-4 col-sm-5 ms-auto">
+                <table class="table table-clear">
+                    <tbody>
+                        <tr>
+                            <td class="left"><strong>Subtotal</strong></td>
+                            <td class="right">₹{{ "{:,.2f}".format(quote.sub_total) }}</td>
+                        </tr>
+                        {% if quote.cgst_total > 0 %}
+                        <tr>
+                            <td class="left"><strong>CGST</strong></td>
+                            <td class="right">₹{{ "{:,.2f}".format(quote.cgst_total) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="left"><strong>SGST</strong></td>
+                            <td class="right">₹{{ "{:,.2f}".format(quote.sgst_total) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if quote.igst_total > 0 %}
+                        <tr>
+                            <td class="left"><strong>IGST</strong></td>
+                            <td class="right">₹{{ "{:,.2f}".format(quote.igst_total) }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if quote.installation_charges > 0 or quote.wiring_charges > 0 or quote.transport_charges > 0 %}
+                        <tr>
+                            <td class="left"><strong>Extra Charges</strong></td>
+                            <td class="right">₹{{ "{:,.2f}".format(quote.installation_charges + quote.wiring_charges + quote.transport_charges) }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td class="left"><strong>Grand Total</strong></td>
+                            <td class="right"><strong>₹{{ "{:,.2f}".format(quote.grand_total) }}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

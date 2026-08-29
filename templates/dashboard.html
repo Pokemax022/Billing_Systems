@@ -1,0 +1,541 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+/* ── Dashboard overrides ── */
+.section-title{font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:14px;}
+.chart-card{border:none !important;border-radius:16px !important;}
+.chart-card .card-header{background:var(--bg-card) !important;border:none !important;border-radius:16px 16px 0 0 !important;padding:18px 20px 4px;}
+.chart-card .card-header h6{font-size:.7rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin:0;}
+
+/* Quotation table */
+.q-table th{font-size:.68rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--text-muted);font-weight:700;border:none;padding:12px 16px;background:var(--bg-table-head) !important;}
+.q-table td{padding:12px 16px;vertical-align:middle;border-color:var(--border-color) !important;font-size:.88rem;color:var(--text-primary);}
+.q-table tr:hover td{background:var(--bg-table-row-hover) !important;}
+
+.insight-card{border:none;border-radius:10px;background:var(--bg-table-head);border-left:4px solid var(--accent-primary);padding:12px 16px;margin-bottom:10px;transition:transform 0.2s;}
+.insight-card:hover{transform:translateX(3px);}
+.insight-card.warn{border-left-color:#f57f17;background:var(--badge-pending-bg);}
+.insight-card.danger{border-left-color:#c62828;background:var(--badge-overdue-bg);}
+.insight-card.success{border-left-color:#2e7d32;background:var(--badge-paid-bg);}
+.insight-title{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:3px;}
+.insight-val{font-size:.95rem;font-weight:700;color:var(--text-primary);}
+
+#profitModal .modal-content{border:none;border-radius:16px;overflow:hidden;}
+#profitModal .modal-header{background:linear-gradient(135deg,#1565c0,#42a5f5);color:#fff;border:none;}
+.profit-summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;}
+.ps-box{background:var(--bg-table-head);border-radius:10px;padding:12px 14px;border:1px solid var(--border-color);}
+.ps-label{font-size:.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.ps-val{font-size:1.15rem;font-weight:800;color:var(--accent-primary);}
+.ps-val.green{color:#66bb6a;}.ps-val.orange{color:#ffa726;}.ps-val.red{color:#ef5350;}
+.item-profit-table th{font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:var(--text-muted);font-weight:600;}
+.item-profit-table td{font-size:.85rem;vertical-align:middle;color:var(--text-primary);}
+.profit-bar-wrap{height:6px;background:var(--border-color);border-radius:3px;margin-top:4px;}
+.profit-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,#43a047,#66bb6a);}
+
+/* Mobile: hide less important table cols */
+@media (max-width: 767px) {
+  .q-table .col-hide-sm { display: none !important; }
+  .profit-summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-header-actions { flex-direction: column; width: 100%; }
+  .dashboard-header-actions .btn { width: 100%; }
+}
+@media (max-width: 575px) {
+  .stat-card .card-value { font-size: 1.2rem; }
+  .profit-summary-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Quick link grid */
+.quick-link-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.quick-link-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;border-radius:12px;border:1px solid var(--border-color);background:var(--bg-table-head);color:var(--text-primary);text-decoration:none;font-size:0.78rem;font-weight:600;transition:all 0.22s ease;text-align:center;}
+.quick-link-btn i{font-size:1.25rem;}
+.quick-link-btn:hover{background:var(--accent-primary);color:#fff;border-color:var(--accent-primary);transform:translateY(-2px);box-shadow:0 4px 14px var(--accent-glow);}
+
+/* Top product progress bars */
+.prod-bar-row{margin-bottom:12px;}
+.prod-bar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-size:.84rem;}
+.prod-bar-track{height:6px;background:var(--border-color);border-radius:3px;overflow:hidden;}
+.prod-bar-fill{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent-primary),var(--accent-secondary));width:var(--bar-width, 0%);}
+</style>
+
+<!-- ── Page Header ── -->
+<div class="page-header dashboard-header mb-4">
+  <div class="page-header-left">
+    <div class="page-breadcrumb">
+      <i class="fas fa-home"></i>
+      <span>›</span>
+      <span>Dashboard</span>
+    </div>
+    <h4 class="page-title">Business Dashboard</h4>
+    <div class="page-subtitle">Internal Profit Analytics &amp; Business Intelligence</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap dashboard-header-actions">
+    <a href="{{ url_for('quotations.create') }}" class="btn btn-primary btn-sm px-3">
+      <i class="fas fa-plus me-1"></i>New Quotation
+    </a>
+    <a href="{{ url_for('export.export_profit_report') }}" class="btn btn-outline-success btn-sm px-3">
+      <i class="fas fa-download me-1"></i>Export Report
+    </a>
+  </div>
+</div>
+
+<!-- FAB for mobile -->
+<a href="{{ url_for('quotations.create') }}" class="fab-btn" title="New Quotation">
+  <i class="fas fa-plus"></i>
+</a>
+
+<!-- ── Row 1: 4 Main Stat Cards ── -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-blue shimmer-card fade-in-up stagger-1">
+      <div class="card-icon"><i class="fas fa-file-invoice"></i></div>
+      <div class="card-label">Total Quotations</div>
+      <div class="card-value counter" data-target="{{ total_quotations }}">0</div>
+      <div class="card-sub">All time</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-teal shimmer-card fade-in-up stagger-2">
+      <div class="card-icon"><i class="fas fa-users"></i></div>
+      <div class="card-label">Customers</div>
+      <div class="card-value counter" data-target="{{ total_customers }}">0</div>
+      <div class="card-sub">{{ total_products }} products in DB</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-indigo shimmer-card fade-in-up stagger-3">
+      <div class="card-icon"><i class="fas fa-rupee-sign"></i></div>
+      <div class="card-label">Total Revenue</div>
+      <div class="card-value" style="font-size:1.35rem;">₹{{ "{:,.0f}".format(revenue) }}</div>
+      <div class="card-sub">Gross billed amount</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-green shimmer-card fade-in-up stagger-4">
+      <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+      <div class="card-label">Net Profit</div>
+      <div class="card-value" style="font-size:1.35rem;">₹{{ "{:,.0f}".format(profit) }}</div>
+      <div class="card-sub">Avg margin {{ avg_margin }}%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row 2: 4 Secondary Stat Cards ── -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-purple shimmer-card fade-in-up stagger-1">
+      <div class="card-icon"><i class="fas fa-sun"></i></div>
+      <div class="card-label">Today's Profit</div>
+      <div class="card-value" style="font-size:1.35rem;">₹{{ "{:,.0f}".format(today_profit) }}</div>
+      <div class="card-sub">Internal</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-orange shimmer-card fade-in-up stagger-2">
+      <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+      <div class="card-label">Monthly Profit</div>
+      <div class="card-value" style="font-size:1.35rem;">₹{{ "{:,.0f}".format(monthly_profit) }}</div>
+      <div class="card-sub">Rev ₹{{ "{:,.0f}".format(monthly_revenue) }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-pink shimmer-card fade-in-up stagger-3">
+      <div class="card-icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="card-label">Low Margin</div>
+      <div class="card-value counter" data-target="{{ low_margin_count }}">0</div>
+      <div class="card-sub">Below 10% margin</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="stat-card c-amber shimmer-card fade-in-up stagger-4" style="color:#1a1a2e;">
+      <div class="card-icon"><i class="fas fa-star" style="color:#1a1a2e;"></i></div>
+      <div class="card-label" style="color:#333;">Best Customer</div>
+      <div class="card-value" style="font-size:1.05rem;color:#1a1a2e;line-height:1.2;">{{ best_customer[:16] }}</div>
+      <div class="card-sub" style="color:#555;">₹{{ "{:,.0f}".format(best_customer_rev) }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row 3: Charts ── -->
+<div class="row g-3 mb-4">
+  <div class="col-12 col-md-7">
+    <div class="card chart-card h-100">
+      <div class="card-header d-flex align-items-center justify-content-between">
+        <h6>Monthly Revenue vs Profit <small class="text-muted fw-normal">(Last 6 Months)</small></h6>
+      </div>
+      <div class="card-body"><canvas id="monthlyChart" style="max-height:220px;"></canvas></div>
+    </div>
+  </div>
+  <div class="col-12 col-md-5">
+    <div class="card chart-card h-100">
+      <div class="card-header"><h6>Top 5 Profitable Quotations</h6></div>
+      <div class="card-body"><canvas id="topQuoteChart" style="max-height:220px;"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row 4: Insights + Top Products + Quick Links ── -->
+<div class="row g-3 mb-4">
+  <!-- Smart Insights -->
+  <div class="col-12 col-md-4">
+    <div class="card chart-card h-100">
+      <div class="card-header"><h6>Smart Insights</h6></div>
+      <div class="card-body">
+        {% if best_quote %}
+        <div class="insight-card success">
+          <div class="insight-title">Most Profitable Quote</div>
+          <div class="insight-val">{{ best_quote.quotation_number }} — ₹{{ "{:,.0f}".format(best_quote_profit) }}</div>
+        </div>
+        {% endif %}
+        <div class="insight-card">
+          <div class="insight-title">Overall Avg Margin</div>
+          <div class="insight-val">{{ avg_margin }}%</div>
+        </div>
+        {% if low_margin_count > 0 %}
+        <div class="insight-card danger">
+          <div class="insight-title">Low Margin Warning</div>
+          <div class="insight-val">{{ low_margin_count }} quotation(s) below 10%</div>
+        </div>
+        {% endif %}
+        <div class="insight-card success">
+          <div class="insight-title">Best Customer</div>
+          <div class="insight-val">{{ best_customer }}</div>
+        </div>
+        <div class="insight-card" style="border-left-color:#7c4dff;">
+          <div class="insight-title">Monthly Revenue</div>
+          <div class="insight-val">₹{{ "{:,.0f}".format(monthly_revenue) }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Selling Products with progress bars -->
+  <div class="col-12 col-md-4">
+    <div class="card chart-card h-100">
+      <div class="card-header"><h6>Top Selling Products</h6></div>
+      <div class="card-body">
+        {% set max_qty = top_products[0][1] if top_products else 1 %}
+        {% for name, qty in top_products %}
+        <div class="prod-bar-row">
+          <div class="prod-bar-label">
+            <span style="font-weight:600;color:var(--text-primary);font-size:.85rem;">{{ name[:28] }}</span>
+            <span class="badge bg-primary rounded-pill" style="font-size:.7rem;">{{ qty }} units</span>
+          </div>
+          <div class="prod-bar-track">
+            {% set pct = ((qty / max_qty) * 100) | round | int %}
+            <div class="prod-bar-fill" style="--bar-width: {{ pct }}%;"></div>
+          </div>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:30px 10px;">
+          <span class="empty-icon"><i class="fas fa-box-open"></i></span>
+          <p>No product data yet.</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links as icon grid -->
+  <div class="col-12 col-md-4">
+    <div class="card chart-card h-100">
+      <div class="card-header"><h6>Quick Links</h6></div>
+      <div class="card-body">
+        <div class="quick-link-grid">
+          <a href="{{ url_for('quotations.create') }}" class="quick-link-btn">
+            <i class="fas fa-plus-circle" style="color:#1565c0;"></i>New Quotation
+          </a>
+          <a href="{{ url_for('invoices.create') }}" class="quick-link-btn">
+            <i class="fas fa-file-invoice-dollar" style="color:#2e7d32;"></i>New Invoice
+          </a>
+          <a href="{{ url_for('invoices.index') }}" class="quick-link-btn">
+            <i class="fas fa-list" style="color:#546e7a;"></i>All Invoices
+          </a>
+          <a href="{{ url_for('quotations.index') }}" class="quick-link-btn">
+            <i class="fas fa-file-alt" style="color:#1565c0;"></i>All Quotes
+          </a>
+          <a href="{{ url_for('customers.index') }}" class="quick-link-btn">
+            <i class="fas fa-users" style="color:#00838f;"></i>Customers
+          </a>
+          <a href="{{ url_for('products.index') }}" class="quick-link-btn">
+            <i class="fas fa-box" style="color:#546e7a;"></i>Products
+          </a>
+          <a href="{{ url_for('import_erp.hub') }}" class="quick-link-btn">
+            <i class="fas fa-file-excel" style="color:#2e7d32;"></i>Smart Import
+          </a>
+          <a href="{{ url_for('export.export_profit_report') }}" class="quick-link-btn">
+            <i class="fas fa-download" style="color:#6a1b9a;"></i>Export Report
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Row 5: Recent Quotations Table ── -->
+<div class="card chart-card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+    <div>
+      <h6 class="mb-1" style="font-size:0.85rem;font-weight:800;letter-spacing:0.5px;color:var(--text-primary);"><i class="fas fa-file-invoice me-2 text-primary"></i>Recent Quotations</h6>
+      <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Internal Profit &amp; Margin Overview</span>
+    </div>
+    <a href="{{ url_for('quotations.index') }}" class="btn btn-sm btn-outline-primary px-3">
+      <i class="fas fa-list me-1"></i>View All
+    </a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table q-table mb-0">
+        <thead>
+          <tr>
+            <th>Quote #</th>
+            <th class="col-hide-sm">Date</th>
+            <th>Customer</th>
+            <th>Revenue</th>
+            <th class="col-hide-sm">Dealer Cost</th>
+            <th>Profit</th>
+            <th>Margin</th>
+            <th class="col-hide-sm">Status</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in recent_data %}
+          {% set q = row.q %}
+          <tr onclick="loadProfit(this.dataset.id)" data-id="{{ q.id }}" style="cursor:pointer;">
+            <td>
+              <span class="quote-chip">
+                <i class="fas fa-file-lines me-1 opacity-75"></i>{{ q.quotation_number }}
+              </span>
+            </td>
+            <td class="col-hide-sm">
+              <span style="font-size:0.82rem;color:var(--text-secondary);font-weight:500;">
+                {{ q.date.strftime('%d %b %Y') }}
+              </span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="cust-avatar-sm {{ ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal'][loop.index0 % 5] }}">
+                  {{ (q.customer.name[0] if q.customer else 'C') | upper }}
+                </div>
+                <span class="fw-semibold text-truncate" style="max-width:180px;color:var(--text-primary);font-size:0.88rem;" title="{{ q.customer.name if q.customer else '—' }}">
+                  {{ q.customer.name if q.customer else '—' }}
+                </span>
+              </div>
+            </td>
+            <td>
+              <span class="fw-bold" style="color:var(--text-primary);font-size:0.9rem;font-variant-numeric:tabular-nums;">
+                ₹{{ "{:,.0f}".format(row.revenue) }}
+              </span>
+            </td>
+            <td class="col-hide-sm">
+              <span style="color:var(--text-secondary);font-size:0.85rem;font-variant-numeric:tabular-nums;">
+                ₹{{ "{:,.0f}".format(q.total_dealer_cost) }}
+              </span>
+            </td>
+            <td>
+              <span class="{% if row.profit >= 0 %}profit-pos{% else %}profit-neg{% endif %}" style="font-size:0.88rem;font-variant-numeric:tabular-nums;">
+                {% if row.profit >= 0 %}+{% endif %}₹{{ "{:,.0f}".format(row.profit) }}
+              </span>
+            </td>
+            <td>
+              <span class="margin-pill {{ row.badge }}">{{ row.margin }}%</span>
+            </td>
+            <td class="col-hide-sm">
+              {% if q.payment_status == 'Paid' %}
+                <span class="status-pill status-paid"><i class="fas fa-circle dot"></i> Paid</span>
+              {% elif q.payment_status == 'Partial' %}
+                <span class="status-pill status-partial"><i class="fas fa-circle dot"></i> Partial</span>
+              {% else %}
+                <span class="status-pill status-unpaid"><i class="fas fa-circle dot"></i> Unpaid</span>
+              {% endif %}
+            </td>
+            <td onclick="event.stopPropagation();" class="text-end" style="white-space:nowrap;">
+              <div class="action-btn-group justify-content-end">
+                <a href="{{ url_for('quotations.view', id=q.id) }}" class="tbl-action-btn view-btn" title="View Quotation">
+                  <i class="fas fa-eye"></i>
+                </a>
+                <button type="button" class="tbl-action-btn profit-btn" onclick="loadProfit(this.closest('tr').dataset.id)" title="Profit Analytics">
+                  <i class="fas fa-chart-pie"></i>
+                </button>
+                <a href="{{ url_for('quotations.select_template', id=q.id) }}" class="tbl-action-btn pdf-btn" title="Download PDF">
+                  <i class="fas fa-file-pdf"></i>
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="9" class="py-5">
+              <div class="empty-state" style="padding:20px;">
+                <span class="empty-icon"><i class="fas fa-file-invoice"></i></span>
+                <h5>No quotations yet</h5>
+                <p>Create your first quotation to get started.</p>
+                <a href="{{ url_for('quotations.create') }}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>New Quotation</a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ── PROFIT MODAL ── -->
+<div class="modal fade" id="profitModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fas fa-chart-bar me-2"></i>Internal Profit Analytics — <span id="modalQuoteNum"></span></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="profitModalBody">
+        <div class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="dashboard-chart-data" type="application/json">
+{
+  "monthly": {{ monthly_chart | tojson }},
+  "top": {{ top_chart | tojson }}
+}
+</script>
+<script>
+// Animated counters
+document.querySelectorAll('.counter').forEach(el => {
+  const target = +el.dataset.target;
+  if (target === 0) { el.textContent = '0'; return; }
+  let cur = 0;
+  const step = Math.max(1, Math.ceil(target / 50));
+  const t = setInterval(() => {
+    cur = Math.min(cur + step, target);
+    el.textContent = cur.toLocaleString('en-IN');
+    if (cur >= target) clearInterval(t);
+  }, 25);
+});
+
+// Chart data
+const chartDataEl = document.getElementById('dashboard-chart-data');
+const chartData = chartDataEl ? JSON.parse(chartDataEl.textContent) : { monthly: [], top: [] };
+
+// Common chart defaults for dark mode
+function getChartColors() {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    grid: dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)',
+    label: dark ? '#607d8b' : '#90a4ae',
+    legend: dark ? '#b0bec5' : '#546e7a',
+  };
+}
+
+// Monthly chart
+const mc = document.getElementById('monthlyChart');
+if (mc) {
+  const cc = getChartColors();
+  new Chart(mc, {
+    type: 'bar',
+    data: {
+      labels: chartData.monthly.map(item => item.label),
+      datasets: [
+        { label: 'Revenue', data: chartData.monthly.map(item => item.revenue),
+          backgroundColor: 'rgba(21,101,192,0.75)', borderRadius: 6, borderSkipped: false },
+        { label: 'Profit',  data: chartData.monthly.map(item => item.profit),
+          backgroundColor: 'rgba(46,125,50,0.75)',  borderRadius: 6, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'top', labels: { color: cc.legend, font: { family: 'Inter', size: 11 } } } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: cc.grid }, ticks: { color: cc.label, font: { family: 'Inter', size: 10 } } },
+        x: { grid: { display: false }, ticks: { color: cc.label, font: { family: 'Inter', size: 10 } } }
+      }
+    }
+  });
+}
+
+// Top quotes chart
+const tq = document.getElementById('topQuoteChart');
+if (tq) {
+  const cc = getChartColors();
+  new Chart(tq, {
+    type: 'bar',
+    data: {
+      labels: chartData.top.map(item => item.label),
+      datasets: [{ label: 'Profit (₹)', data: chartData.top.map(item => item.profit),
+        backgroundColor: ['rgba(21,101,192,.85)','rgba(46,125,50,.85)','rgba(106,27,154,.85)','rgba(230,81,0,.85)','rgba(0,131,143,.85)'],
+        borderRadius: 6 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { beginAtZero: true, grid: { color: cc.grid }, ticks: { color: cc.label, font: { family: 'Inter', size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: cc.label, font: { family: 'Inter', size: 10 } } }
+      }
+    }
+  });
+}
+
+// Profit modal loader
+function loadProfit(id) {
+  const modal = new bootstrap.Modal(document.getElementById('profitModal'));
+  document.getElementById('profitModalBody').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3 text-muted" style="font-size:.85rem;">Loading profit data...</p></div>';
+  document.getElementById('modalQuoteNum').textContent = '';
+  modal.show();
+
+  fetch('/api/quotation-profit/' + id)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('modalQuoteNum').textContent = d.quotation_number;
+      const marginColor = d.margin >= 20 ? '#2e7d32' : d.margin >= 10 ? '#f57f17' : '#c62828';
+      let itemRows = d.items.map(it => {
+        const mc2 = it.item_margin >= 20 ? '#2e7d32' : it.item_margin >= 10 ? '#f57f17' : '#c62828';
+        return `<tr>
+          <td><strong>${it.name}</strong><br><small class="text-muted">${it.hsn_code}</small></td>
+          <td class="text-muted">₹${it.dealer_price.toFixed(2)}</td>
+          <td>₹${it.selling_price.toFixed(2)}</td>
+          <td class="text-center"><strong>${it.quantity}</strong></td>
+          <td style="color:${mc2};font-weight:700;">₹${it.item_profit.toFixed(2)}</td>
+          <td><span style="color:${mc2};font-weight:700;">${it.item_margin}%</span>
+            <div class="profit-bar-wrap"><div class="profit-bar" style="width:${Math.min(it.item_margin,100)}%;background:${mc2};"></div></div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      document.getElementById('profitModalBody').innerHTML = `
+        <div class="profit-summary-grid">
+          <div class="ps-box"><div class="ps-label">Revenue (ex-GST)</div><div class="ps-val">₹${d.revenue_ex_gst.toFixed(2)}</div></div>
+          <div class="ps-box"><div class="ps-label">Dealer Cost</div><div class="ps-val orange">₹${d.dealer_cost.toFixed(2)}</div></div>
+          <div class="ps-box"><div class="ps-label">Gross Profit</div><div class="ps-val green">₹${d.gross_profit.toFixed(2)}</div></div>
+          <div class="ps-box"><div class="ps-label">Profit Margin</div><div class="ps-val" style="color:${marginColor};">${d.margin}%</div></div>
+          <div class="ps-box"><div class="ps-label">GST Collected</div><div class="ps-val">₹${d.gst_collected.toFixed(2)}</div></div>
+          <div class="ps-box"><div class="ps-label">Installation</div><div class="ps-val">₹${d.installation_charges.toFixed(2)}</div></div>
+        </div>
+        <h6 class="section-title mt-3">Item-Wise Breakdown <span class="badge bg-danger ms-1" style="font-size:.62rem;">INTERNAL</span></h6>
+        <div class="table-responsive">
+          <table class="table item-profit-table table-hover">
+            <thead class="table-light">
+              <tr><th>Product</th><th>Dealer Price</th><th>Selling Price</th><th class="text-center">Qty</th><th>Profit</th><th>Margin %</th></tr>
+            </thead>
+            <tbody>${itemRows}</tbody>
+          </table>
+        </div>
+        <div class="d-flex gap-2 mt-2 flex-wrap">
+          <a href="/quotations/view/${id}" class="btn btn-outline-info btn-sm"><i class="fas fa-eye me-1"></i>View Quotation</a>
+          <a href="/quotations/template/${id}" class="btn btn-outline-danger btn-sm"><i class="fas fa-file-pdf me-1"></i>Download PDF</a>
+          <a href="/quotations/whatsapp/${id}" class="btn btn-outline-whatsapp btn-sm"><i class="fab fa-whatsapp me-1"></i>WhatsApp Web</a>
+        </div>`;
+    })
+    .catch(() => {
+      document.getElementById('profitModalBody').innerHTML = '<div class="alert alert-danger"><i class="fas fa-exclamation-circle me-2"></i>Failed to load profit data.</div>';
+    });
+}
+</script>
+{% endblock %}

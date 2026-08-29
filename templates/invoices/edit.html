@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.section-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+.items-table { width:100%; border-collapse:collapse; }
+.items-table th { font-size:.68rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); background:var(--bg-table-head); padding:10px 8px; border-bottom:2px solid var(--border-color); white-space:nowrap; }
+.items-table td { padding:6px 5px; vertical-align:middle; border-bottom:1px solid var(--border-color); }
+.items-table tr:last-child td { border-bottom:none; }
+.items-table .form-control, .items-table .form-select { background:var(--bg-input) !important; border-color:var(--border-input) !important; color:var(--text-primary) !important; font-size:.85rem; padding:5px 8px; }
+.remove-item-btn { width:28px; height:28px; border-radius:6px; border:1px solid #ef5350; color:#ef5350; background:transparent; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; transition:all .2s; font-size:12px; }
+.remove-item-btn:hover { background:#ef5350; color:#fff; }
+.add-row-btn { border:2px dashed var(--border-color); background:transparent; color:var(--text-muted); border-radius:8px; padding:8px 20px; cursor:pointer; font-size:.85rem; font-weight:500; transition:all .2s; width:100%; margin-top:8px; }
+.add-row-btn:hover { border-color:var(--accent-primary); color:var(--accent-primary); background:rgba(21,101,192,.05); }
+.total-panel { background:var(--bg-table-head); border:1px solid var(--border-color); border-radius:10px; padding:18px 20px; position:sticky; top:16px; }
+.total-row { display:flex; justify-content:space-between; padding:6px 0; font-size:.88rem; border-bottom:1px solid var(--border-color); }
+.total-row:last-child { border-bottom:none; }
+.total-row .lbl { color:var(--text-secondary); }
+.total-row .val { font-weight:600; color:var(--text-primary); }
+.grand-total-row { font-size:1.05rem; font-weight:800; padding-top:12px !important; }
+.grand-total-row .val { color:var(--accent-primary); font-size:1.15rem; }
+.cust-preview { background:var(--bg-table-head); border:1px solid var(--border-color); border-radius:8px; padding:12px 14px; font-size:.85rem; }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
+    <div>
+        <h4 class="fw-bold mb-0">
+            <i class="fas fa-edit me-2" style="color:var(--accent-primary);"></i>Edit Invoice
+        </h4>
+        <small style="color:var(--text-muted);">Invoice <strong>{{ inv.invoice_number }}</strong></small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('invoices.view', id=inv.id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-eye me-1"></i>View
+        </a>
+        <a href="{{ url_for('invoices.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<form method="POST" id="invoiceForm" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    <div class="row g-3">
+        <div class="col-lg-8">
+
+            <!-- Invoice Info -->
+            <div class="section-card fade-in-up">
+                <div class="form-section-heading">Invoice Details</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Invoice Date <span class="text-danger">*</span></label>
+                        <input type="date" name="date" class="form-control"
+                               value="{{ inv.date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control"
+                               value="{{ inv.due_date.strftime('%Y-%m-%d') if inv.due_date else '' }}">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Payment Status</label>
+                        <select name="payment_status" class="form-select">
+                            {% for s in ['Pending','Partially Paid','Paid','Overdue','Cancelled'] %}
+                            <option value="{{ s }}" {% if inv.payment_status == s %}selected{% endif %}>{{ s }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Reference / Quotation No.</label>
+                        <input type="text" name="reference_number" class="form-control"
+                               value="{{ inv.reference_number or '' }}" placeholder="e.g. Q-1005">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="">— Select —</option>
+                            {% for pm in ['Cash','Bank Transfer','UPI','Cheque','NEFT/RTGS'] %}
+                            <option value="{{ pm }}" {% if inv.payment_method == pm %}selected{% endif %}>{{ pm }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer -->
+            <div class="section-card fade-in-up">
+                <div class="form-section-heading">Bill To</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select name="customer_id" id="customerSelect" class="form-select" required>
+                            <option value="">— Select Customer —</option>
+                            {% for c in customers %}
+                            <option value="{{ c.id }}" {% if inv.customer_id == c.id %}selected{% endif %}>
+                                {{ c.name }}{% if c.mobile %} ({{ c.mobile }}){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6" id="custPreviewWrap" {% if not inv.customer %}style="display:none;"{% endif %}>
+                        <label class="form-label">Customer Info</label>
+                        <div class="cust-preview" id="custPreview">
+                            <i class="fas fa-user me-1" style="color:var(--accent-primary);"></i>
+                            <strong id="cpName">{{ inv.customer.name if inv.customer else '' }}</strong><br>
+                            <span id="cpAddr" style="color:var(--text-secondary);">
+                                {{ [inv.customer.address, inv.customer.city, inv.customer.state]|select|join(', ') if inv.customer else '' }}
+                            </span><br>
+                            <span id="cpGst" style="color:var(--text-muted);font-size:.8rem;">
+                                {{ 'GSTIN: ' + inv.customer.gst_number if inv.customer and inv.customer.gst_number else '' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Items Table -->
+            <div class="section-card fade-in-up">
+                <div class="form-section-heading">Items / Services</div>
+                <div class="table-responsive">
+                    <table class="items-table" id="itemsTable">
+                        <thead>
+                            <tr>
+                                <th style="width:22%;">Item / Service</th>
+                                <th style="width:16%;">Description</th>
+                                <th style="width:8%;">HSN</th>
+                                <th style="width:7%;">Qty</th>
+                                <th style="width:11%;">Rate (₹)</th>
+                                <th style="width:8%;">Disc %</th>
+                                <th style="width:8%;">GST %</th>
+                                <th style="width:12%;">Amount</th>
+                                <th style="width:4%;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="itemsBody"></tbody>
+                    </table>
+                </div>
+                <button type="button" class="add-row-btn" id="addItemBtn">
+                    <i class="fas fa-plus me-2"></i>Add Item
+                </button>
+            </div>
+
+            <!-- Additional Charges -->
+            <div class="section-card fade-in-up">
+                <div class="form-section-heading">Additional Charges</div>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Installation Rate/Point (₹)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" name="installation_charges" class="form-control charge-input"
+                                   value="{{ inv.installation_rate }}" min="0">
+                            <input type="number" name="installation_qty" class="form-control"
+                                   value="{{ inv.installation_qty }}" min="1" style="max-width:70px;" placeholder="Qty">
+                        </div>
+                        <small style="color:var(--text-muted);">Total: <strong id="instTotalHint">₹{{ "%.2f"|format(inv.installation_charges) }}</strong></small>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Wiring Charges (₹)</label>
+                        <input type="number" step="0.01" name="wiring_charges" class="form-control charge-input"
+                               value="{{ inv.wiring_charges }}" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Transport Charges (₹)</label>
+                        <input type="number" step="0.01" name="transport_charges" class="form-control charge-input"
+                               value="{{ inv.transport_charges }}" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes & Terms -->
+            <div class="section-card fade-in-up">
+                <div class="form-section-heading">Notes & Terms</div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Notes</label>
+                        <textarea name="notes" class="form-control" rows="3">{{ inv.notes or '' }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Terms & Conditions</label>
+                        <textarea name="terms_conditions" class="form-control" rows="3">{{ inv.terms_conditions or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT — Totals -->
+        <div class="col-lg-4 fade-in-up">
+            <div class="total-panel">
+                <h6 style="font-size:.72rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">
+                    Invoice Summary
+                </h6>
+                <div class="total-row">
+                    <span class="lbl">Subtotal (Taxable)</span>
+                    <span class="val" id="lblSubTotal">₹{{ "%.2f"|format(inv.sub_total) }}</span>
+                </div>
+                <div class="total-row">
+                    <span class="lbl">Tax (GST)</span>
+                    <span class="val" id="lblTax">₹{{ "%.2f"|format(inv.total_tax) }}</span>
+                </div>
+                <div class="total-row">
+                    <span class="lbl">Extra Charges</span>
+                    <span class="val" id="lblCharges">₹{{ "%.2f"|format(inv.installation_charges + inv.wiring_charges + inv.transport_charges) }}</span>
+                </div>
+                <div class="total-row">
+                    <span class="lbl">
+                        Discount
+                        <div class="d-flex gap-1 mt-1">
+                            <select name="discount_type" id="discountType" class="form-select form-select-sm" style="width:90px;font-size:.78rem;padding:3px 6px;">
+                                <option value="percent" {% if inv.discount_type == 'percent' %}selected{% endif %}>%</option>
+                                <option value="fixed" {% if inv.discount_type == 'fixed' %}selected{% endif %}>₹ Fixed</option>
+                            </select>
+                            <input type="number" step="0.01" name="discount_value" id="discountValue"
+                                   class="form-control form-control-sm" style="width:80px;font-size:.78rem;padding:3px 6px;"
+                                   value="{{ inv.discount_value }}" min="0">
+                        </div>
+                    </span>
+                    <span class="val text-danger" id="lblDiscount">-₹{{ "%.2f"|format(inv.discount_amount) }}</span>
+                </div>
+                <div class="total-row grand-total-row">
+                    <span class="lbl" style="font-weight:700;color:var(--text-primary);">Grand Total</span>
+                    <span class="val" id="lblGrandTotal">₹{{ "%.2f"|format(inv.grand_total) }}</span>
+                </div>
+
+                {% if inv.paid_amount > 0 %}
+                <hr style="border-color:var(--border-color);margin:10px 0;">
+                <div class="total-row">
+                    <span class="lbl" style="color:#2e7d32;">Paid</span>
+                    <span class="val" style="color:#2e7d32;">₹{{ "%.2f"|format(inv.paid_amount) }}</span>
+                </div>
+                <div class="total-row">
+                    <span class="lbl" style="color:#c62828;">Balance Due</span>
+                    <span class="val" style="color:#c62828;">₹{{ "%.2f"|format(inv.balance_due) }}</span>
+                </div>
+                {% endif %}
+
+                <hr style="border-color:var(--border-color);margin:14px 0;">
+                <button type="submit" class="btn btn-primary w-100" id="submitBtn">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+                <a href="{{ url_for('invoices.view', id=inv.id) }}" class="btn btn-outline-secondary w-100 mt-2">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+<datalist id="productList"></datalist>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Pre-existing items from server
+const existingItems = [
+    {% for item in inv.items %}
+    { name: {{ item.name|tojson }}, desc: {{ (item.description or '')|tojson }},
+      hsn: {{ (item.hsn_code or '')|tojson }}, qty: {{ item.quantity }},
+      rate: {{ item.unit_price }}, disc: {{ item.discount_percent }},
+      gst: {{ item.gst_percent }}, pid: {{ item.product_id or 'null' }} },
+    {% endfor %}
+];
+
+$(document).ready(function () {
+    let rowIdx = 0;
+
+    $('#customerSelect').on('change', function () {
+        const cid = $(this).val();
+        if (!cid) { $('#custPreviewWrap').hide(); return; }
+        $.get('/customers/api/get/' + cid, function (d) {
+            $('#cpName').text(d.name);
+            $('#cpAddr').text([d.address, d.city, d.state].filter(Boolean).join(', ') || 'N/A');
+            $('#cpGst').text(d.gst_number ? 'GSTIN: ' + d.gst_number : '');
+            $('#custPreviewWrap').show();
+            window.isInterstate = (d.gst_number && !d.gst_number.startsWith('24'));
+            recalculate();
+        });
+    });
+
+    function addRow(data) {
+        rowIdx++;
+        data = data || {};
+        const tr = `<tr id="irow_${rowIdx}">
+            <td><input type="text" name="item_name[]" class="form-control item-name" list="productList"
+                       value="${data.name||''}" placeholder="Type to search..." autocomplete="off" required>
+                <input type="hidden" name="item_product_id[]" class="item-pid" value="${data.pid||''}">
+            </td>
+            <td><input type="text" name="item_desc[]" class="form-control item-desc"
+                       value="${data.desc||''}" placeholder="Optional"></td>
+            <td><input type="text" name="item_hsn[]" class="form-control item-hsn"
+                       value="${data.hsn||''}" style="width:70px;"></td>
+            <td><input type="number" name="item_qty[]" class="form-control item-qty qty-calc"
+                       value="${data.qty||1}" min="0.01" step="0.01" style="width:65px;"></td>
+            <td><input type="number" name="item_rate[]" class="form-control item-rate qty-calc"
+                       value="${data.rate||0}" min="0" step="0.01" style="width:95px;"></td>
+            <td><input type="number" name="item_discount[]" class="form-control item-disc qty-calc"
+                       value="${data.disc||0}" min="0" max="100" step="0.01" style="width:65px;"></td>
+            <td><input type="number" name="item_gst[]" class="form-control item-gst qty-calc"
+                       value="${data.gst||18}" min="0" step="0.01" style="width:65px;"></td>
+            <td class="text-end fw-bold item-amount" style="color:var(--text-primary);white-space:nowrap;">₹0.00</td>
+            <td><button type="button" class="remove-item-btn remove-row"><i class="fas fa-times"></i></button></td>
+        </tr>`;
+        $('#itemsBody').append(tr);
+        bindProductSearch($(`#irow_${rowIdx}`));
+        recalculate();
+    }
+
+    function bindProductSearch(row) {
+        let timer;
+        row.find('.item-name').on('input focus', function () {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                $.get('{{ url_for("products.api_search") }}', { q: $(this).val() }, function (data) {
+                    const dl = $('#productList').empty();
+                    data.results.forEach(p => dl.append($('<option>').val(p.text)));
+                });
+            }, 250);
+        });
+        row.find('.item-name').on('change', function () {
+            const val = $(this).val().trim();
+            $.get('{{ url_for("products.api_search") }}', { q: val }, function (data) {
+                if (data.results.length > 0) {
+                    const p = data.results[0];
+                    row.find('.item-pid').val(p.id);
+                    row.find('.item-name').val(p.text);
+                    row.find('.item-rate').val(p.price);
+                    row.find('.item-gst').val(p.gst);
+                    row.find('.item-hsn').val(p.hsn || '');
+                    recalculate();
+                }
+            });
+        });
+        row.find('.qty-calc').on('input change', recalculate);
+    }
+
+    function recalculate() {
+        let subTotal = 0, taxTotal = 0;
+        $('#itemsBody tr').each(function () {
+            const qty = parseFloat($(this).find('.item-qty').val()) || 0;
+            const rate = parseFloat($(this).find('.item-rate').val()) || 0;
+            const discPct = parseFloat($(this).find('.item-disc').val()) || 0;
+            const gstPct = parseFloat($(this).find('.item-gst').val()) || 0;
+            const lineGross = qty * rate;
+            const taxable = lineGross - lineGross * (discPct / 100);
+            const tax = taxable * (gstPct / 100);
+            $(this).find('.item-amount').text('₹' + (taxable + tax).toFixed(2));
+            subTotal += taxable;
+            taxTotal += tax;
+        });
+        const instRate = parseFloat($('input[name="installation_charges"]').val()) || 0;
+        const instQty = parseFloat($('input[name="installation_qty"]').val()) || 1;
+        const inst = instRate * instQty;
+        const wire = parseFloat($('input[name="wiring_charges"]').val()) || 0;
+        const trans = parseFloat($('input[name="transport_charges"]').val()) || 0;
+        const charges = inst + wire + trans;
+        $('#instTotalHint').text('₹' + inst.toFixed(2));
+        const discType = $('#discountType').val();
+        const discVal = parseFloat($('#discountValue').val()) || 0;
+        const discAmt = discType === 'percent' ? subTotal * (discVal / 100) : discVal;
+        const grand = Math.max(0, subTotal + taxTotal + charges - discAmt);
+        $('#lblSubTotal').text('₹' + subTotal.toFixed(2));
+        $('#lblTax').text('₹' + taxTotal.toFixed(2));
+        $('#lblCharges').text('₹' + charges.toFixed(2));
+        $('#lblDiscount').text('-₹' + discAmt.toFixed(2));
+        $('#lblGrandTotal').text('₹' + grand.toFixed(2));
+    }
+
+    $('#addItemBtn').on('click', () => addRow());
+    $(document).on('click', '.remove-row', function () {
+        $(this).closest('tr').remove();
+        recalculate();
+    });
+    $('body').on('input change', '.charge-input, input[name="installation_qty"]', recalculate);
+    $('body').on('input change', '#discountType, #discountValue', recalculate);
+
+    $('#invoiceForm').on('submit', function (e) {
+        if ($('#itemsBody tr').length === 0) {
+            e.preventDefault();
+            showToast('Please add at least one item.', 'error');
+            return;
+        }
+        $('#submitBtn').html('<i class="fas fa-spinner fa-spin me-2"></i>Saving...').prop('disabled', true);
+    });
+
+    // Load existing items
+    existingItems.forEach(d => addRow(d));
+    if (existingItems.length === 0) addRow();
+});
+</script>
+{% endblock %}

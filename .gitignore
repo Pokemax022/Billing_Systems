@@ -1,0 +1,61 @@
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+
+# Python / Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# SQLite database files (Keep code & schema clean; don't commit local DB in production)
+instance/*.db
+*.sqlite3
+*.sqlite
+*.db
+
+# Temporary generated files
+pdf/*.pdf
+!pdf/.gitkeep
+excel_import/*.xlsx
+excel_import/*.csv
+!excel_import/.gitkeep
+VinayBhai.pdf
+VinayBhai.xlsx
+
+# IDE / Editor folders
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Operating System
+.DS_Store
+Thumbs.db

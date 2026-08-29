@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.template-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    background: #fff;
+}
+.template-card:hover {
+    border-color: #1565c0;
+    box-shadow: 0 8px 24px rgba(21,101,192,0.15);
+    transform: translateY(-3px);
+}
+.template-card.selected {
+    border-color: #1565c0;
+    box-shadow: 0 0 0 3px rgba(21,101,192,0.25);
+}
+.template-card .card-preview {
+    height: 200px;
+    overflow: hidden;
+    position: relative;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.template-card .card-preview .preview-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: #1565c0;
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+}
+.preview-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+}
+
+/* Fake thumbnail designs */
+.thumb-premium {
+    background: linear-gradient(135deg, #0a1f5c 0%, #1565c0 100%);
+    width: 100%; height: 100%;
+    position: relative;
+    padding: 14px;
+}
+.thumb-premium .tp-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.thumb-premium .tp-circle {
+    width: 28px; height: 28px;
+    background: #fff;
+    border-radius: 50%;
+    margin-right: 8px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+.thumb-premium .tp-title { color: #fff; font-size: 11px; font-weight: bold; }
+.thumb-premium .tp-sub { color: #90caf9; font-size: 7px; }
+.thumb-premium .tp-right {
+    margin-left: auto;
+    text-align: right;
+}
+.thumb-premium .tp-quot { color: #fff; font-size: 9px; font-weight: bold; letter-spacing: 2px; }
+.tp-table { width: 100%; margin-top: 6px; background: #fff; border-radius: 4px; overflow: hidden; }
+.tp-table-head { background: #0a1f5c; color: #fff; font-size: 5px; padding: 3px 4px; }
+.tp-table-row { background: #f5f7ff; font-size: 5px; padding: 3px 4px; color: #263238; }
+.tp-table-row:nth-child(even) { background: #fff; }
+.tp-total { background: #0a1f5c; color: #fff; font-size: 6px; padding: 4px; text-align: right; font-weight: bold; margin-top: 4px; }
+
+.thumb-classic {
+    background: #fff;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    border-left: 5px solid #0a1f5c;
+}
+.thumb-classic .tc-header { background: #0a1f5c; padding: 6px 8px; margin-bottom: 6px; }
+.thumb-classic .tc-title { color: #fff; font-size: 10px; font-weight: bold; }
+.thumb-classic .tc-table-h { background: #0a1f5c; color: #fff; font-size: 5px; padding: 2px 4px; }
+.thumb-classic .tc-row { font-size: 5px; padding: 2px 4px; color: #333; border-bottom: 1px solid #eee; }
+.thumb-classic .tc-grand { background: #0a1f5c; color: #fff; font-size: 6px; padding: 4px; text-align: right; font-weight: bold; margin-top: 6px; }
+
+.thumb-minimal {
+    background: #fff;
+    width: 100%;
+    height: 100%;
+    padding: 16px;
+}
+.thumb-minimal .tm-name { font-size: 14px; font-weight: bold; border-bottom: 2px solid #111; padding-bottom: 4px; margin-bottom: 4px; }
+.thumb-minimal .tm-doc { font-size: 8px; color: #555; letter-spacing: 3px; margin-bottom: 8px; }
+.thumb-minimal .tm-table { width: 100%; }
+.thumb-minimal .tm-th { background: #111; color: #fff; font-size: 5px; padding: 2px 4px; }
+.thumb-minimal .tm-td { font-size: 5px; padding: 2px 4px; border-bottom: 1px solid #eee; color: #333; }
+.thumb-minimal .tm-grand { background: #111; color: #fff; font-size: 6px; padding: 4px; text-align: right; font-weight: bold; margin-top: 6px; }
+
+.thumb-dhruv { background: #fff; width: 100%; height: 100%; padding: 10px; border: 1px solid #ccc; font-family: monospace; }
+.thumb-dhruv .td-h { text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 4px; margin-bottom: 4px; }
+.thumb-dhruv .td-title { font-size: 8px; font-weight: bold; text-decoration: underline; margin-bottom: 2px; }
+.thumb-dhruv .td-sub { font-size: 5px; color: #666; }
+.thumb-dhruv .td-box { border: 1px solid #eee; padding: 2px; font-size: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+.thumb-dhruv .td-table { width: 100%; font-size: 4px; border-collapse: collapse; }
+.thumb-dhruv .td-table th, .thumb-dhruv .td-table td { border: 1px solid #eee; padding: 2px; }
+.thumb-dhruv .td-grand { text-align: right; font-weight: bold; font-size: 5px; margin-top: 4px; border-top: 1px solid #ccc; padding-top: 2px; }
+
+.thumb-adarsh { background: #fff; width: 100%; height: 100%; padding: 10px; border: 1px solid #ccc; }
+.thumb-adarsh .ta-h { background: linear-gradient(to right, #4a90e2, #f5a623); color: #fff; text-align: center; font-size: 7px; font-weight: bold; padding: 4px; margin-bottom: 4px; }
+.thumb-adarsh .ta-flex { display: flex; justify-content: space-between; font-size: 4px; margin-bottom: 4px; }
+.thumb-adarsh .ta-table { width: 100%; font-size: 4px; border-collapse: collapse; margin-bottom: 4px; }
+.thumb-adarsh .ta-table th, .thumb-adarsh .ta-table td { border: 1px solid #eee; padding: 2px; }
+.thumb-adarsh .ta-grand { text-align: right; font-weight: bold; font-size: 5px; border-top: 1px solid #ccc; padding-top: 2px; }
+
+.selected-check {
+    display: none;
+    position: absolute;
+    top: 10px; left: 10px;
+    width: 22px; height: 22px;
+    background: #1565c0;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+    line-height: 22px;
+}
+.template-card.selected .selected-check { display: block; }
+</style>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0"><i class="fas fa-file-alt text-primary me-2"></i>Select Quotation Template</h5>
+            <small class="text-muted">Quotation: <strong>{{ quote.quotation_number }}</strong> — {{ quote.customer.name if quote.customer else 'N/A' }}</small>
+        </div>
+        <a href="{{ url_for('quotations.view', id=quote.id) }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    <div class="card-body">
+
+        <div class="row g-4 mb-4" id="templateCards">
+
+            <!-- PREMIUM -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_premium" onclick="selectTemplate('premium')">
+                    <div class="card-preview">
+                        <div class="preview-badge">⭐ RECOMMENDED</div>
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-premium">
+                            <div class="tp-header">
+                                <div class="tp-circle">📷</div>
+                                <div>
+                                    <div class="tp-title">{{ company.name if company else 'COMPANY' }}</div>
+                                    <div class="tp-sub">CCTV & SECURITY</div>
+                                </div>
+                                <div class="tp-right">
+                                    <div class="tp-quot">QUOTATION</div>
+                                    <div style="color:#90caf9;font-size:6px;">{{ quote.quotation_number }}</div>
+                                </div>
+                            </div>
+                            <table class="tp-table" cellpadding="0" cellspacing="0">
+                                <tr><td class="tp-table-head">PRODUCT</td><td class="tp-table-head">QTY</td><td class="tp-table-head">RATE</td><td class="tp-table-head">VALUE</td></tr>
+                                {% for item in quote.items[:3] %}
+                                <tr><td class="tp-table-row">{{ item.name[:15] }}</td><td class="tp-table-row">{{ item.quantity }}</td><td class="tp-table-row">{{ "{:,.0f}".format(item.selling_price) }}</td><td class="tp-table-row">{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                            </table>
+                            <div class="tp-total">TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Premium Template</h6>
+                        <p class="text-muted small mb-0">Dark blue branded design with logo, customer card, QR payment & stamp</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CLASSIC -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_classic" onclick="selectTemplate('classic')">
+                    <div class="card-preview">
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-classic">
+                            <div class="tc-header">
+                                <div class="tc-title">{{ company.name if company else 'COMPANY' }} &nbsp;|&nbsp; QUOTATION</div>
+                            </div>
+                            <table style="width:100%;" cellpadding="0" cellspacing="0">
+                                <tr><td class="tc-table-h">PRODUCT</td><td class="tc-table-h">QTY</td><td class="tc-table-h">RATE</td><td class="tc-table-h">VALUE</td></tr>
+                                {% for item in quote.items[:4] %}
+                                <tr><td class="tc-row">{{ item.name[:15] }}</td><td class="tc-row">{{ item.quantity }}</td><td class="tc-row">{{ "{:,.0f}".format(item.selling_price) }}</td><td class="tc-row">{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                            </table>
+                            <div class="tc-grand">GRAND TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Classic Template</h6>
+                        <p class="text-muted small mb-0">Clean professional layout with bank details, QR code &amp; signature</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MINIMAL -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_minimal" onclick="selectTemplate('minimal')">
+                    <div class="card-preview">
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-minimal">
+                            <div class="tm-name">{{ company.name if company else 'COMPANY NAME' }}</div>
+                            <div class="tm-doc">QUOTATION</div>
+                            <table class="tm-table" cellpadding="0" cellspacing="0">
+                                <tr><td class="tm-th">PRODUCT</td><td class="tm-th">QTY</td><td class="tm-th">RATE</td><td class="tm-th">VALUE</td></tr>
+                                {% for item in quote.items[:4] %}
+                                <tr><td class="tm-td">{{ item.name[:15] }}</td><td class="tm-td">{{ item.quantity }}</td><td class="tm-td">{{ "{:,.0f}".format(item.selling_price) }}</td><td class="tm-td">{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                            </table>
+                            <div class="tm-grand">GRAND TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Minimal Template</h6>
+                        <p class="text-muted small mb-0">Simple black &amp; white design — company name only, no branding</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DHRUV -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_dhruv" onclick="selectTemplate('dhruv')">
+                    <div class="card-preview">
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-dhruv">
+                            <div class="td-h">
+                                <div class="td-title">TAX INVOICE</div>
+                                <div style="font-size:10px; font-weight:bold;">{{ company.name if company else 'COMPANY' }}</div>
+                                <div class="td-sub">CCTV &amp; Security Solutions</div>
+                            </div>
+                            <div class="td-box">
+                                <div>Billed To: {{ quote.customer.name if quote.customer else 'N/A' }}</div>
+                                <div>Inv: {{ quote.quotation_number }}</div>
+                            </div>
+                            <table class="td-table">
+                                <tr><th>DESC</th><th>QTY</th><th>RATE</th><th>AMT</th></tr>
+                                {% for item in quote.items[:3] %}
+                                <tr><td>{{ item.name[:12] }}</td><td>{{ item.quantity }}</td><td>{{ "{:,.0f}".format(item.selling_price) }}</td><td>{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                            </table>
+                            <div class="td-grand">TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Dhruv Chemical (GST)</h6>
+                        <p class="text-muted small mb-0">Standard black & white GST tax invoice with full tax breakup columns</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADARSH -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_adarsh" onclick="selectTemplate('adarsh')">
+                    <div class="card-preview">
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-adarsh">
+                            <div class="ta-h">{{ company.name if company else 'COMPANY' }}</div>
+                            <div class="ta-flex">
+                                <div>Buyer: {{ quote.customer.name[:10] if quote.customer else 'N/A' }}</div>
+                                <div style="text-align:right;">Inv: {{ quote.quotation_number }}<br>Tax Invoice</div>
+                            </div>
+                            <table class="ta-table">
+                                <tr><th>DESC</th><th>QTY</th><th>RATE</th><th>AMT</th></tr>
+                                {% for item in quote.items[:2] %}
+                                <tr><td>{{ item.name[:12] }}</td><td>{{ item.quantity }}</td><td>{{ "{:,.0f}".format(item.selling_price) }}</td><td>{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                                <tr><td>CGST/SGST</td><td></td><td></td><td>...</td></tr>
+                            </table>
+                            <div class="ta-grand">TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Adarsh Print (GST)</h6>
+                        <p class="text-muted small mb-0">Colorful header GST invoice with summary tax table at the bottom</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADARSH V2 -->
+            <div class="col-md-4">
+                <div class="template-card" id="card_adarsh_v2" onclick="selectTemplate('adarsh_v2')">
+                    <div class="card-preview">
+                        <div class="selected-check">✓</div>
+                        <div class="thumb-adarsh">
+                            <div class="ta-h" style="height: 35px; display:flex; flex-direction:column; justify-content:center;">
+                                <div style="font-size: 8px;">{{ company.name if company else 'COMPANY' }}</div>
+                                <div style="font-size: 4px; font-weight:normal; opacity:0.9; margin-top:2px;">Email: {{ company.email }} | Ph: {{ company.mobile }}</div>
+                            </div>
+                            <div class="ta-flex">
+                                <div>Buyer: {{ quote.customer.name[:10] if quote.customer else 'N/A' }}</div>
+                                <div style="text-align:right;">Inv: {{ quote.quotation_number }}<br>Tax Invoice</div>
+                            </div>
+                            <table class="ta-table">
+                                <tr><th>DESC</th><th>QTY</th><th>RATE</th><th>AMT</th></tr>
+                                {% for item in quote.items[:2] %}
+                                <tr><td>{{ item.name[:12] }}</td><td>{{ item.quantity }}</td><td>{{ "{:,.0f}".format(item.selling_price) }}</td><td>{{ "{:,.0f}".format(item.taxable_value) }}</td></tr>
+                                {% endfor %}
+                                <tr><td>CGST/SGST</td><td></td><td></td><td>...</td></tr>
+                            </table>
+                            <div class="ta-grand">TOTAL: ₹{{ "{:,.2f}".format(quote.grand_total) }}</div>
+                        </div>
+                    </div>
+                    <div class="card-body text-center p-3">
+                        <h6 class="fw-bold mb-1">Adarsh Print V2</h6>
+                        <p class="text-muted small mb-0">Extended gradient block header with address & contact details included</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <button class="btn btn-outline-primary btn-lg px-4" onclick="previewTemplate()">
+                <i class="fas fa-eye me-2"></i>Preview in Browser
+            </button>
+            <button class="btn btn-primary btn-lg px-4" onclick="downloadPDF()">
+                <i class="fas fa-download me-2"></i>Download PDF
+            </button>
+            <button class="btn btn-whatsapp btn-lg px-4" onclick="sendViaWhatsApp()">
+                <i class="fab fa-whatsapp me-2"></i>Send via WhatsApp Web
+            </button>
+        </div>
+
+        <p class="text-center text-muted small mt-3">
+            <i class="fas fa-info-circle me-1"></i>
+            Preview opens the quotation in a new tab so you can verify before downloading or sending via WhatsApp.
+        </p>
+
+    </div>
+</div>
+
+<script>
+let selectedTemplate = 'premium'; // default
+
+function selectTemplate(name) {
+    selectedTemplate = name;
+    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById('card_' + name).classList.add('selected');
+}
+
+function previewTemplate() {
+    window.open('/quotations/preview/{{ quote.id }}?template=' + selectedTemplate, '_blank');
+}
+
+function downloadPDF() {
+    window.location.href = '/quotations/pdf/{{ quote.id }}?template=' + selectedTemplate;
+}
+
+function sendViaWhatsApp() {
+    window.location.href = '/quotations/whatsapp/{{ quote.id }}?template=' + selectedTemplate;
+}
+
+// Select premium by default
+selectTemplate('premium');
+</script>
+
+{% endblock %}

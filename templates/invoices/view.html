@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+.detail-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 22px 24px; margin-bottom: 20px; }
+.info-label { font-size:.72rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); margin-bottom:3px; }
+.info-value { font-size:.95rem; font-weight:600; color:var(--text-primary); }
+.info-value-sm { font-size:.85rem; color:var(--text-secondary); }
+.totals-box { background:var(--bg-table-head); border:1px solid var(--border-color); border-radius:10px; padding:16px 18px; }
+.tot-row { display:flex; justify-content:space-between; padding:5px 0; font-size:.88rem; border-bottom:1px solid var(--border-color); }
+.tot-row:last-child { border-bottom:none; }
+.tot-grand { font-size:1.1rem; font-weight:800; padding-top:10px !important; }
+.pmt-history-row { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; border-radius:8px; background:var(--bg-table-head); border:1px solid var(--border-color); margin-bottom:8px; }
+.action-bar-btn { display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:8px; font-weight:500; font-size:.875rem; text-decoration:none; transition:all .2s; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-primary); cursor:pointer; }
+.action-bar-btn:hover { border-color:var(--accent-primary); color:var(--accent-primary); box-shadow:0 4px 12px rgba(21,101,192,.1); }
+.action-bar-btn.danger:hover { border-color:#c62828; color:#c62828; }
+.action-bar-btn.primary { background:var(--accent-primary); color:#fff; border-color:var(--accent-primary); }
+.action-bar-btn.primary:hover { filter:brightness(1.1); }
+</style>
+
+<!-- Header -->
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4 fade-in-up">
+    <div>
+        <h4 class="fw-bold mb-1">
+            Invoice <span style="color:var(--accent-primary);">{{ inv.invoice_number }}</span>
+        </h4>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% set s = inv.payment_status %}
+            {% if s == 'Paid' %}
+                <span class="status-badge status-paid"><i class="fas fa-check-circle"></i>Paid</span>
+            {% elif s == 'Pending' %}
+                <span class="status-badge status-pending"><i class="fas fa-clock"></i>Pending</span>
+            {% elif s == 'Partially Paid' %}
+                <span class="status-badge status-partial"><i class="fas fa-adjust"></i>Partially Paid</span>
+            {% elif s == 'Overdue' %}
+                <span class="status-badge status-overdue"><i class="fas fa-exclamation-triangle"></i>Overdue</span>
+            {% elif s == 'Cancelled' %}
+                <span class="status-badge status-cancelled"><i class="fas fa-ban"></i>Cancelled</span>
+            {% endif %}
+            <small style="color:var(--text-muted);">Created {{ inv.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+        </div>
+    </div>
+    <!-- Action Bar -->
+    <div class="d-flex flex-wrap gap-2">
+        <a href="{{ url_for('invoices.edit', id=inv.id) }}" class="action-bar-btn">
+            <i class="fas fa-edit"></i>Edit
+        </a>
+        <a href="{{ url_for('invoices.preview', id=inv.id) }}" class="action-bar-btn" target="_blank">
+            <i class="fas fa-expand-alt"></i>Preview
+        </a>
+        <a href="{{ url_for('invoices.download_pdf', id=inv.id) }}" class="action-bar-btn">
+            <i class="fas fa-file-pdf"></i>Download PDF
+        </a>
+        <button onclick="window.print()" class="action-bar-btn">
+            <i class="fas fa-print"></i>Print
+        </button>
+        <form method="POST" action="{{ url_for('invoices.duplicate', id=inv.id) }}" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="action-bar-btn"><i class="fas fa-copy"></i>Duplicate</button>
+        </form>
+        <form method="POST" action="{{ url_for('invoices.delete', id=inv.id) }}" style="display:inline;"
+              onsubmit="return confirm('Delete invoice {{ inv.invoice_number }}? This cannot be undone.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <button type="submit" class="action-bar-btn danger"><i class="fas fa-trash"></i>Delete</button>
+        </form>
+        <a href="{{ url_for('invoices.index') }}" class="action-bar-btn">
+            <i class="fas fa-arrow-left"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- LEFT -->
+    <div class="col-lg-8">
+
+        <!-- Header Info -->
+        <div class="detail-card fade-in-up">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="info-label">Invoice Number</div>
+                    <div class="info-value" style="color:var(--accent-primary);">{{ inv.invoice_number }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-label">Invoice Date</div>
+                    <div class="info-value">{{ inv.date.strftime('%d %b %Y') }}</div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-label">Due Date</div>
+                    <div class="info-value {% if inv.is_overdue %}text-danger{% endif %}">
+                        {{ inv.due_date.strftime('%d %b %Y') if inv.due_date else '—' }}
+                        {% if inv.is_overdue %}<i class="fas fa-exclamation-circle ms-1 text-danger"></i>{% endif %}
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="info-label">Reference No.</div>
+                    <div class="info-value">{{ inv.reference_number or '—' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer -->
+        <div class="detail-card fade-in-up">
+            <div class="form-section-heading">Bill To</div>
+            {% if inv.customer %}
+            <div class="row g-2">
+                <div class="col-md-6">
+                    <div class="info-value" style="font-size:1rem;">{{ inv.customer.name }}</div>
+                    {% if inv.customer.address %}
+                    <div class="info-value-sm mt-1">{{ inv.customer.address }}</div>
+                    {% endif %}
+                    {% if inv.customer.city or inv.customer.state %}
+                    <div class="info-value-sm">{{ [inv.customer.city, inv.customer.state, inv.customer.pin_code]|select|join(', ') }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if inv.customer.mobile %}
+                    <div class="info-value-sm"><i class="fas fa-phone me-1" style="color:var(--accent-primary);"></i>{{ inv.customer.mobile }}</div>
+                    {% endif %}
+                    {% if inv.customer.email %}
+                    <div class="info-value-sm"><i class="fas fa-envelope me-1" style="color:var(--accent-primary);"></i>{{ inv.customer.email }}</div>
+                    {% endif %}
+                    {% if inv.customer.gst_number %}
+                    <div class="info-value-sm"><i class="fas fa-id-card me-1" style="color:var(--accent-primary);"></i>GSTIN: <strong>{{ inv.customer.gst_number }}</strong></div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-muted mb-0"><em>Customer not linked or deleted.</em></p>
+            {% endif %}
+        </div>
+
+        <!-- Items Table -->
+        <div class="detail-card fade-in-up">
+            <div class="form-section-heading">Items</div>
+            <div class="table-responsive">
+                <table class="table" style="font-size:.88rem;">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Item / Service</th>
+                            <th>HSN</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Rate</th>
+                            <th class="text-center">Disc%</th>
+                            <th class="text-center">GST%</th>
+                            <th class="text-end">Taxable</th>
+                            <th class="text-end">Tax</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inv.items %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <strong>{{ item.name }}</strong>
+                                {% if item.description %}
+                                <br><small style="color:var(--text-muted);">{{ item.description }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ item.hsn_code or '—' }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">₹{{ "{:,.2f}".format(item.unit_price) }}</td>
+                            <td class="text-center">{{ item.discount_percent }}%</td>
+                            <td class="text-center">{{ item.gst_percent }}%</td>
+                            <td class="text-end">₹{{ "{:,.2f}".format(item.taxable_value) }}</td>
+                            <td class="text-end">₹{{ "{:,.2f}".format(item.tax_amount) }}</td>
+                            <td class="text-end fw-bold">₹{{ "{:,.2f}".format(item.line_total) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        {% if inv.notes or inv.terms_conditions %}
+        <div class="detail-card fade-in-up">
+            <div class="row g-3">
+                {% if inv.notes %}
+                <div class="col-md-6">
+                    <div class="info-label">Notes</div>
+                    <div class="info-value-sm" style="white-space:pre-line;">{{ inv.notes }}</div>
+                </div>
+                {% endif %}
+                {% if inv.terms_conditions %}
+                <div class="col-md-6">
+                    <div class="info-label">Terms & Conditions</div>
+                    <div class="info-value-sm" style="white-space:pre-line;">{{ inv.terms_conditions }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Payment History -->
+        <div class="detail-card fade-in-up">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-section-heading mb-0">Payment History</div>
+                {% if inv.balance_due > 0 and inv.payment_status != 'Cancelled' %}
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <i class="fas fa-plus me-1"></i>Record Payment
+                </button>
+                {% endif %}
+            </div>
+
+            {% if inv.payments %}
+            {% for pmt in inv.payments %}
+            <div class="pmt-history-row">
+                <div>
+                    <div class="info-value" style="font-size:.9rem;">
+                        ₹{{ "{:,.2f}".format(pmt.amount) }}
+                        <span class="badge bg-secondary ms-1" style="font-size:.7rem;">{{ pmt.payment_method or 'N/A' }}</span>
+                    </div>
+                    <div style="font-size:.78rem;color:var(--text-muted);">
+                        {{ pmt.payment_date.strftime('%d %b %Y') }}
+                        {% if pmt.reference_number %} · Ref: {{ pmt.reference_number }}{% endif %}
+                        {% if pmt.notes %} · {{ pmt.notes }}{% endif %}
+                    </div>
+                </div>
+                <form method="POST" action="{{ url_for('invoices.delete_payment', pmt_id=pmt.id) }}"
+                      onsubmit="return confirm('Remove this payment entry?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-4" style="color:var(--text-muted);">
+                <i class="fas fa-receipt mb-2" style="font-size:1.8rem;opacity:.35;"></i>
+                <p class="mb-0">No payments recorded yet.</p>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- RIGHT — Totals -->
+    <div class="col-lg-4">
+        <div class="detail-card fade-in-up" style="position:sticky;top:16px;">
+            <div class="form-section-heading">Summary</div>
+            <div class="totals-box mb-3">
+                <div class="tot-row">
+                    <span style="color:var(--text-secondary);">Subtotal</span>
+                    <span class="fw-bold">₹{{ "{:,.2f}".format(inv.sub_total) }}</span>
+                </div>
+                {% if inv.cgst_total > 0 %}
+                <div class="tot-row">
+                    <span style="color:var(--text-secondary);">CGST</span>
+                    <span>₹{{ "{:,.2f}".format(inv.cgst_total) }}</span>
+                </div>
+                <div class="tot-row">
+                    <span style="color:var(--text-secondary);">SGST</span>
+                    <span>₹{{ "{:,.2f}".format(inv.sgst_total) }}</span>
+                </div>
+                {% endif %}
+                {% if inv.igst_total > 0 %}
+                <div class="tot-row">
+                    <span style="color:var(--text-secondary);">IGST</span>
+                    <span>₹{{ "{:,.2f}".format(inv.igst_total) }}</span>
+                </div>
+                {% endif %}
+                {% if inv.installation_charges > 0 or inv.wiring_charges > 0 or inv.transport_charges > 0 %}
+                <div class="tot-row">
+                    <span style="color:var(--text-secondary);">Extra Charges</span>
+                    <span>₹{{ "{:,.2f}".format(inv.installation_charges + inv.wiring_charges + inv.transport_charges) }}</span>
+                </div>
+                {% endif %}
+                {% if inv.discount_amount > 0 %}
+                <div class="tot-row">
+                    <span style="color:#c62828;">Discount</span>
+                    <span style="color:#c62828;">-₹{{ "{:,.2f}".format(inv.discount_amount) }}</span>
+                </div>
+                {% endif %}
+                <div class="tot-row tot-grand">
+                    <span style="color:var(--text-primary);">Grand Total</span>
+                    <span style="color:var(--accent-primary);">₹{{ "{:,.2f}".format(inv.grand_total) }}</span>
+                </div>
+            </div>
+
+            <!-- Payment Summary -->
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;">
+                        <div style="font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#2e7d32;margin-bottom:3px;">Paid</div>
+                        <div style="font-size:1rem;font-weight:800;color:#2e7d32;">₹{{ "{:,.2f}".format(inv.paid_amount) }}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div style="background:{{ '#e8f5e9' if inv.balance_due == 0 else '#ffebee' }};border-radius:8px;padding:10px 12px;">
+                        <div style="font-size:.65rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:{{ '#2e7d32' if inv.balance_due == 0 else '#c62828' }};margin-bottom:3px;">Balance Due</div>
+                        <div style="font-size:1rem;font-weight:800;color:{{ '#2e7d32' if inv.balance_due == 0 else '#c62828' }};">₹{{ "{:,.2f}".format(inv.balance_due) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if inv.payment_method %}
+            <div class="info-label">Payment Method</div>
+            <div class="info-value-sm mb-3">{{ inv.payment_method }}</div>
+            {% endif %}
+
+            {% if company %}
+            <div style="background:var(--bg-table-head);border:1px solid var(--border-color);border-radius:8px;padding:12px 14px;font-size:.82rem;">
+                <div style="font-weight:700;color:var(--text-primary);margin-bottom:6px;">Bank Details</div>
+                {% if company.bank_name %}<div style="color:var(--text-secondary);">Bank: <strong>{{ company.bank_name }}</strong></div>{% endif %}
+                {% if company.account_number %}<div style="color:var(--text-secondary);">A/C: <strong>{{ company.account_number }}</strong></div>{% endif %}
+                {% if company.ifsc_code %}<div style="color:var(--text-secondary);">IFSC: <strong>{{ company.ifsc_code }}</strong></div>{% endif %}
+            </div>
+            {% endif %}
+
+            {% if inv.balance_due > 0 and inv.payment_status != 'Cancelled' %}
+            <button class="btn btn-success w-100 mt-3" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                <i class="fas fa-plus me-2"></i>Record Payment
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,#2e7d32,#66bb6a);border:none;">
+                <h5 class="modal-title text-white"><i class="fas fa-plus me-2"></i>Record Payment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('invoices.record_payment', id=inv.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                        <input type="number" name="amount" class="form-control" step="0.01" min="0.01"
+                               max="{{ inv.balance_due }}" value="{{ inv.balance_due }}" required>
+                        <small style="color:var(--text-muted);">Balance due: ₹{{ "{:,.2f}".format(inv.balance_due) }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Date</label>
+                        <input type="date" name="payment_date" class="form-control"
+                               value="{{ now.strftime('%Y-%m-%d') if now else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select name="payment_method" class="form-select">
+                            <option value="">— Select —</option>
+                            {% for pm in ['Cash','Bank Transfer','UPI','Cheque','NEFT/RTGS'] %}
+                            <option value="{{ pm }}" {% if inv.payment_method == pm %}selected{% endif %}>{{ pm }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reference Number</label>
+                        <input type="text" name="reference_number" class="form-control" placeholder="UTR, Cheque No., etc.">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <input type="text" name="notes" class="form-control" placeholder="Optional notes">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Pre-fill today's date in payment modal
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('#paymentModal input[name="payment_date"]');
+    if (dateInput && !dateInput.value) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+    }
+});
+</script>
+{% endblock %}

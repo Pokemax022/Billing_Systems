@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+@page { size: A4; margin: 0; }
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    color: #1a1a2e;
+    background: #ffffff;
+    line-height: 1.5;
+    width: 210mm;
+}
+
+/* ──────── HEADER ──────── */
+.header-band {
+    background: #0d1b4b;
+    padding: 22px 28px 18px 28px;
+    color: #fff;
+}
+.header-inner { width: 100%; }
+.header-left  { float: left;  width: 62%; vertical-align: top; }
+.header-right { float: right; width: 36%; vertical-align: top; }
+.clearfix::after { content: ""; display: table; clear: both; }
+
+.company-name {
+    font-size: 20pt;
+    font-weight: bold;
+    color: #ffffff;
+    letter-spacing: 1px;
+}
+.company-tagline {
+    font-size: 7pt;
+    color: #90caf9;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin: 3px 0 8px 0;
+}
+.company-info {
+    font-size: 8pt;
+    color: #bbdefb;
+    line-height: 1.7;
+}
+.gstin-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 2px 8px;
+    font-size: 7.5pt;
+    color: #e3f2fd;
+    margin-top: 6px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* Quote info box */
+.quote-info-box {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 12px 14px;
+    text-align: right;
+}
+.doc-type-label {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 3px;
+    border-bottom: 1px solid rgba(255,255,255,0.3);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+.quote-meta-row { width: 100%; }
+.quote-meta-row td {
+    font-size: 8pt;
+    padding: 2px 0;
+    color: #e3f2fd;
+}
+.quote-meta-row td:first-child {
+    font-weight: normal;
+    color: #90caf9;
+    text-align: left;
+    padding-right: 8px;
+}
+.quote-meta-row td:last-child {
+    font-weight: bold;
+    color: #fff;
+    text-align: right;
+}
+
+/* ──────── BODY ──────── */
+.body { padding: 16px 24px; }
+
+/* ──────── CUSTOMER CARD ──────── */
+.customer-card {
+    background: #f0f4ff;
+    border: 1px solid #c5d3f0;
+    border-left: 5px solid #1565c0;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+}
+.section-micro-label {
+    font-size: 7pt;
+    font-weight: bold;
+    color: #1565c0;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+}
+.customer-name-lg {
+    font-size: 12pt;
+    font-weight: bold;
+    color: #0d1b4b;
+    margin-bottom: 3px;
+}
+.customer-info {
+    font-size: 8.5pt;
+    color: #37474f;
+    line-height: 1.6;
+}
+.gst-badge {
+    display: inline-block;
+    background: #e8eaf6;
+    border: 1px solid #7986cb;
+    padding: 1px 7px;
+    font-size: 7.5pt;
+    color: #3949ab;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+/* ──────── SECTION HEADING ──────── */
+.section-heading {
+    font-size: 7.5pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #1565c0;
+    border-bottom: 2px solid #1565c0;
+    padding-bottom: 3px;
+    margin-bottom: 8px;
+}
+
+/* ──────── PRODUCTS TABLE ──────── */
+.items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 8.5pt;
+}
+.items-table thead tr {
+    background: #0d1b4b;
+    color: #fff;
+}
+.items-table th {
+    padding: 8px 7px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: none;
+    color: #fff;
+}
+.items-table tbody tr:nth-child(even) { background: #f5f7ff; }
+.items-table tbody tr { border-bottom: 1px solid #e8ecf4; }
+.items-table td {
+    padding: 8px 7px;
+    color: #263238;
+    border-bottom: 1px solid #eaecf5;
+}
+.items-table tbody tr:last-child td { border-bottom: 2px solid #c5d3f0; }
+
+/* ──────── CHARGES TABLE ──────── */
+.charges-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 8.5pt;
+}
+.charges-table th {
+    background: #e8eaf6;
+    padding: 7px 8px;
+    font-size: 7.5pt;
+    font-weight: bold;
+    color: #283593;
+    text-transform: uppercase;
+    border: 1px solid #c5cae9;
+}
+.charges-table td {
+    padding: 7px 8px;
+    border: 1px solid #e0e0e0;
+    color: #263238;
+}
+.charges-table tbody tr:nth-child(even) { background: #f8f8ff; }
+
+/* ──────── BOTTOM SECTION ──────── */
+.bottom-left  { float: left;  width: 57%; vertical-align: top; padding-right: 14px; }
+.bottom-right { float: right; width: 41%; vertical-align: top; }
+
+/* Amount in words */
+.amount-words-box {
+    background: #fffde7;
+    border: 1px solid #f9a825;
+    padding: 9px 12px;
+    margin-bottom: 12px;
+}
+.aw-label {
+    font-size: 7pt;
+    font-weight: bold;
+    color: #e65100;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+.aw-text {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #1a237e;
+    line-height: 1.4;
+}
+
+/* Bank details */
+.bank-box {
+    background: #f3f4f8;
+    border: 1px solid #c5cae9;
+    border-left: 4px solid #3949ab;
+    padding: 9px 12px;
+    margin-bottom: 12px;
+}
+.bank-box .bank-label {
+    font-size: 7pt;
+    font-weight: bold;
+    color: #283593;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+.bank-table { width: 100%; }
+.bank-table td {
+    font-size: 8pt;
+    padding: 2px 0;
+    color: #37474f;
+}
+.bank-table td:first-child { font-weight: normal; color: #546e7a; width: 50%; }
+.bank-table td:last-child  { font-weight: bold; color: #0d1b4b; }
+
+/* QR */
+.qr-box {
+    text-align: center;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    padding: 8px;
+}
+.qr-box img { width: 75px; height: 75px; }
+.qr-box p {
+    font-size: 7pt;
+    color: #546e7a;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+/* Totals */
+.totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #c5cae9;
+    font-size: 8.5pt;
+}
+.totals-table tr td { padding: 7px 10px; border-bottom: 1px solid #e8eaf6; }
+.totals-table tr:last-child td { border-bottom: none; }
+.totals-table .t-label { color: #546e7a; font-weight: normal; }
+.totals-table .t-value { text-align: right; font-weight: bold; color: #0d1b4b; }
+.totals-table .tax-row { background: #f0f4ff; }
+.totals-table .tax-row td { color: #283593; font-weight: bold; }
+.totals-table .grand-row { background: #0d1b4b; }
+.totals-table .grand-row td {
+    color: #fff !important;
+    font-size: 10pt;
+    font-weight: bold;
+    padding: 10px 10px;
+    border-bottom: none;
+}
+
+/* Warranty */
+.warranty-box {
+    background: #e8f5e9;
+    border: 1px solid #a5d6a7;
+    border-left: 4px solid #2e7d32;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    font-size: 8pt;
+    color: #1b5e20;
+}
+.warranty-box .w-label {
+    font-size: 7pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+
+/* Signature */
+.sig-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 12px;
+    margin-top: 16px;
+}
+.sig-left  { float: left;  width: 60%; vertical-align: top; }
+.sig-right { float: right; width: 38%; text-align: center; }
+.sig-line {
+    border-top: 1.5px solid #0d1b4b;
+    width: 140px;
+    margin: 38px auto 6px auto;
+}
+.sig-name  { font-size: 8pt; font-weight: bold; color: #0d1b4b; }
+.sig-sub   { font-size: 7.5pt; color: #546e7a; }
+.terms-label {
+    font-size: 7pt;
+    font-weight: bold;
+    color: #546e7a;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+.terms-text { font-size: 8pt; color: #607d8b; line-height: 1.6; white-space: pre-line; }
+
+/* Footer */
+.footer-band {
+    background: #0d1b4b;
+    color: #90caf9;
+    text-align: center;
+    padding: 7px 24px;
+    font-size: 7pt;
+    letter-spacing: 0.5px;
+    margin-top: 14px;
+}
+
+.tc { text-align: center; }
+.tr { text-align: right; }
+.bold { font-weight: bold; }
+</style>
+</head>
+<body>
+
+<!-- ════════ HEADER ════════ -->
+<div class="header-band">
+    <table class="header-inner" cellpadding="0" cellspacing="0">
+        <tr>
+            <td class="header-left">
+                <div class="company-name">{{ company.name }}</div>
+                <div class="company-tagline">CCTV &amp; Security Solutions</div>
+                <div class="company-info">
+                    {{ company.address }}<br>
+                    <strong style="color:#fff;">Ph:</strong> {{ company.mobile }}
+                    &nbsp; | &nbsp;
+                    <strong style="color:#fff;">Email:</strong> {{ company.email }}
+                </div>
+                <span class="gstin-badge">GSTIN: {{ company.gstin }}</span>
+            </td>
+            <td class="header-right">
+                <div class="quote-info-box">
+                    <div class="doc-type-label">QUOTATION</div>
+                    <table class="quote-meta-row" cellpadding="0" cellspacing="0">
+                        <tr><td>Quote No.</td><td>{{ quote.quotation_number }}</td></tr>
+                        <tr><td>Date</td><td>{{ quote.date.strftime('%d/%m/%Y') }}</td></tr>
+                        <tr><td>Valid For</td><td>30 Days</td></tr>
+                        <tr><td>Payment</td><td>Advance</td></tr>
+                    </table>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <div class="clearfix"></div>
+</div>
+
+<!-- ════════ BODY ════════ -->
+<div class="body" style="padding: 22px 28px;">
+
+    <!-- CUSTOMER -->
+    <div class="customer-card">
+        <div class="section-micro-label">Bill To / Customer Details</div>
+        <div class="customer-name-lg">{{ quote.customer.name if quote.customer else 'N/A' }}</div>
+        <div class="customer-info">
+            {% if quote.customer and quote.customer.address %}
+            <strong>Address:</strong> {{ quote.customer.address }}<br>
+            {% endif %}
+            <strong>Mobile:</strong> {{ quote.customer.mobile if quote.customer else '' }}
+        </div>
+        {% if quote.customer and quote.customer.gst_number %}
+        <span class="gst-badge">GSTIN: {{ quote.customer.gst_number }}</span>
+        {% endif %}
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="section-heading">Products &amp; Services</div>
+    <table class="items-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th class="tc" style="width:5%;">SR</th>
+                <th style="width:36%;">Product / Description</th>
+                <th class="tc" style="width:13%;">HSN Code</th>
+                <th class="tc" style="width:7%;">Qty</th>
+                <th class="tr" style="width:12%;">Rate (&#8377;)</th>
+                <th class="tc" style="width:8%;">GST%</th>
+                <th class="tr" style="width:19%;">Taxable Value (&#8377;)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.items %}
+            <tr>
+                <td class="tc" style="color:#546e7a;font-weight:bold;">{{ loop.index }}</td>
+                <td style="font-weight:bold;color:#0d1b4b;">{{ item.name }}</td>
+                <td class="tc" style="color:#546e7a;font-size:8pt;">{{ item.hsn_code or '-' }}</td>
+                <td class="tc" style="font-weight:bold;">{{ item.quantity }}</td>
+                <td class="tr">{{ "{:,.2f}".format(item.selling_price) }}</td>
+                <td class="tc" style="color:#283593;font-weight:bold;">{{ item.gst_percent|int }}%</td>
+                <td class="tr" style="font-weight:bold;">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- ADDITIONAL CHARGES -->
+    {% set has_extra = quote.installation_charges > 0 or quote.wiring_charges > 0 or quote.transport_charges > 0 %}
+    {% if has_extra %}
+    <div class="section-heading">Additional Charges</div>
+    <table class="charges-table" cellpadding="0" cellspacing="0">
+        <thead>
+            <tr>
+                <th style="width:40%;">Description</th>
+                <th class="tc" style="width:14%;">Qty</th>
+                <th class="tr" style="width:20%;">Rate/Unit (&#8377;)</th>
+                <th class="tr" style="width:26%;">Total Amount (&#8377;)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if quote.installation_charges > 0 %}
+            <tr>
+                <td><strong>Installation Charges</strong> <span style="font-size:7.5pt;color:#546e7a;">(Labour &amp; Setup)</span></td>
+                <td class="tc">{{ quote.installation_qty or 1 }} Point{{ 's' if (quote.installation_qty or 1) > 1 else '' }}</td>
+                <td class="tr">{{ "{:,.2f}".format(quote.installation_rate or 0) }}</td>
+                <td class="tr bold">{{ "{:,.2f}".format(quote.installation_charges) }}</td>
+            </tr>
+            {% endif %}
+            {% if quote.wiring_charges > 0 %}
+            <tr>
+                <td><strong>Wiring &amp; Cabling Charges</strong></td>
+                <td class="tc">—</td>
+                <td class="tr">—</td>
+                <td class="tr bold">{{ "{:,.2f}".format(quote.wiring_charges) }}</td>
+            </tr>
+            {% endif %}
+            {% if quote.transport_charges > 0 %}
+            <tr>
+                <td><strong>Transport / Delivery Charges</strong></td>
+                <td class="tc">—</td>
+                <td class="tr">—</td>
+                <td class="tr bold">{{ "{:,.2f}".format(quote.transport_charges) }}</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- BOTTOM: BANK + TOTALS -->
+    <table style="width:100%;margin-bottom:14px;" cellpadding="0" cellspacing="0">
+        <tr>
+            <!-- LEFT: Amount + Bank + QR -->
+            <td style="width:57%;vertical-align:top;padding-right:14px;">
+                <div class="amount-words-box">
+                    <div class="aw-label">Total Amount in Words</div>
+                    <div class="aw-text">{{ amount_in_words }}</div>
+                </div>
+
+                <div class="bank-box">
+                    <div class="bank-label">Bank Payment Details</div>
+                    <table class="bank-table" cellpadding="0" cellspacing="0">
+                        <tr><td>Bank Name</td><td>{{ company.bank_name }}</td></tr>
+                        <tr><td>Account No.</td><td>{{ company.account_number }}</td></tr>
+                        <tr><td>IFSC Code</td><td>{{ company.ifsc_code }}</td></tr>
+                    </table>
+                </div>
+
+                {% if qr_data_uri %}
+                <div class="qr-box">
+                    <img src="{{ qr_data_uri }}">
+                    <p>Scan to Pay via UPI</p>
+                </div>
+                {% endif %}
+            </td>
+
+            <!-- RIGHT: Totals -->
+            <td style="width:41%;vertical-align:top;">
+                <table class="totals-table" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="t-label">Subtotal (Taxable)</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.sub_total) }}</td>
+                    </tr>
+                    {% if quote.cgst_total > 0 %}
+                    <tr class="tax-row">
+                        <td class="t-label">CGST</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.cgst_total) }}</td>
+                    </tr>
+                    <tr class="tax-row">
+                        <td class="t-label">SGST</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.sgst_total) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if quote.igst_total > 0 %}
+                    <tr class="tax-row">
+                        <td class="t-label">IGST</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.igst_total) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if quote.installation_charges > 0 %}
+                    <tr>
+                        <td class="t-label">Installation</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.installation_charges) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if quote.wiring_charges > 0 %}
+                    <tr>
+                        <td class="t-label">Wiring</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.wiring_charges) }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if quote.transport_charges > 0 %}
+                    <tr>
+                        <td class="t-label">Transport</td>
+                        <td class="t-value">&#8377; {{ "{:,.2f}".format(quote.transport_charges) }}</td>
+                    </tr>
+                    {% endif %}
+                    <tr class="grand-row">
+                        <td>GRAND TOTAL</td>
+                        <td style="text-align:right;">&#8377; {{ "{:,.2f}".format(quote.grand_total) }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <!-- WARRANTY -->
+    {% if quote.warranty_notes %}
+    <div class="warranty-box">
+        <div class="w-label">Warranty Information</div>
+        {{ quote.warranty_notes }}
+    </div>
+    {% endif %}
+
+    <!-- SIGNATURE + TERMS -->
+    <div class="sig-section">
+        <table style="width:100%;" cellpadding="0" cellspacing="0">
+            <tr>
+                <td style="width:60%;vertical-align:top;padding-right:20px;">
+                    {% if company.terms_conditions %}
+                    <div class="terms-label">Terms &amp; Conditions</div>
+                    <div class="terms-text">{{ company.terms_conditions }}</div>
+                    {% endif %}
+                    {% if quote.notes %}
+                    <p style="margin-top:6px;color:#0d1b4b;font-weight:bold;font-size:8.5pt;">Note: {{ quote.notes }}</p>
+                    {% endif %}
+                </td>
+                <td style="width:38%;text-align:center;vertical-align:bottom;">
+                    <div class="sig-line"></div>
+                    <div class="sig-name">For, {{ company.name }}</div>
+                    <div class="sig-sub">Authorised Signatory</div>
+                </td>
+            </tr>
+        </table>
+        <div class="clearfix"></div>
+    </div>
+
+</div><!-- /body -->
+
+<!-- ════════ FOOTER ════════ -->
+<div class="footer-band">
+    {{ company.name }} &nbsp;|&nbsp; {{ company.mobile }} &nbsp;|&nbsp; {{ company.email }} &nbsp;|&nbsp; GSTIN: {{ company.gstin }}
+    &nbsp; — &nbsp; This is a computer-generated quotation.
+</div>
+
+</body>
+</html>

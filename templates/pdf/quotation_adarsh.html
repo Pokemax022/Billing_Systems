@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+@page { size: A4; margin: 0; }
+body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #2c3e50; width: 210mm; padding: 10mm; background: #fff; line-height: 1.4; }
+.main-border { border: 1px solid #dcdde1; width: 100%; border-radius: 4px; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.05); }
+.tc { text-align: center; }
+.tr { text-align: right; }
+.tl { text-align: left; }
+.bold { font-weight: bold; }
+.b-bottom { border-bottom: 1px solid #dcdde1; }
+.b-right { border-right: 1px solid #dcdde1; }
+.b-top { border-top: 1px solid #dcdde1; }
+.b-left { border-left: 1px solid #dcdde1; }
+.p-2 { padding: 6px 8px; }
+table { width: 100%; border-collapse: collapse; }
+td, th { border: 1px solid #dcdde1; padding: 6px 8px; }
+.no-border-table td, .no-border-table th { border: none; padding: 3px 6px; }
+.company-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 60%, #f5a623 100%);
+    color: #fff; text-align: center; font-weight: bold; font-size: 16pt; padding: 14px;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    letter-spacing: 1px;
+}
+.items-table td { border-top: none; border-bottom: none; }
+.items-table th { background: #f8f9fa; color: #34495e; font-weight: bold; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.5px; border-bottom: 2px solid #dcdde1; }
+.items-table tr:nth-child(even) td { background: #fafbfc; -webkit-print-color-adjust: exact; }
+.items-table tr.last-row td { border-bottom: 1px solid #dcdde1; height: 30px; }
+.tax-table th { background: #f8f9fa; color: #34495e; font-size: 7.5pt; }
+.section-title { font-size: 8pt; color: #7f8c8d; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; display: block; }
+.highlight-val { color: #2c3e50; font-size: 9pt; font-weight: bold; }
+</style>
+</head>
+<body>
+<div class="main-border">
+    <table class="no-border-table b-bottom" style="width: 100%;">
+        <tr>
+            <td style="width: 50%; vertical-align: top;" class="b-right p-0">
+                <div class="company-header">{{ company.name }}</div>
+                <div class="p-2" style="font-size: 8pt; color: #7f8c8d; text-align: center; padding: 10px;">
+                    {{ company.address }}<br>
+                    <strong>Email:</strong> {{ company.email }} &nbsp;|&nbsp; <strong>Ph:</strong> {{ company.mobile }}
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top;" class="p-0">
+                <div style="font-size: 14pt; font-weight: bold; padding: 12px 12px 8px 12px; color: #2c3e50; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #eee;">Tax Invoice</div>
+                <table class="no-border-table" style="width: 100%;">
+                    <tr>
+                        <td class="b-right b-bottom p-2" style="width: 50%; padding: 8px 12px;">
+                            <span class="section-title">Invoice No.</span>
+                            <span class="highlight-val">{{ quote.quotation_number }}</span>
+                        </td>
+                        <td class="b-bottom p-2" style="width: 50%; padding: 8px 12px;">
+                            <span class="section-title">Dated</span>
+                            <span class="highlight-val">{{ quote.date.strftime('%d-%b-%Y') }}</span>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="no-border-table b-bottom" style="width: 100%;">
+        <tr>
+            <td style="width: 45%; vertical-align: top; padding: 12px;" class="b-right">
+                <span class="section-title" style="margin-bottom: 6px;">Billed to / Buyer</span>
+                <strong style="font-size: 10pt; color: #2c3e50;">{{ quote.customer.name if quote.customer else 'N/A' }}</strong><br>
+                <div style="color: #555; margin-top: 4px; line-height: 1.5;">
+                    {{ quote.customer.address if quote.customer else '' }}<br>
+                    {% if quote.customer and quote.customer.gst_number %}
+                    <span style="display:inline-block; margin-top: 4px; padding: 2px 6px; background: #e8f4f8; border: 1px solid #b3d4e5; border-radius: 3px; font-weight: bold; color: #2980b9;">GSTIN: {{ quote.customer.gst_number }}</span>
+                    {% endif %}
+                </div>
+            </td>
+            <td style="width: 55%; vertical-align: top; padding: 0;">
+                <table class="no-border-table" style="width: 100%; height: 100%;">
+                    <tr>
+                        <td class="b-right b-bottom p-2" style="width: 50%; padding: 8px 12px;">
+                            <span class="section-title">Delivery Note</span>
+                            &nbsp;
+                        </td>
+                        <td class="b-bottom p-2" style="width: 50%; padding: 8px 12px;">
+                            <span class="section-title">Mode/Terms of Payment</span>
+                            <strong style="color: #2c3e50;">Advance</strong>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="b-right p-2" style="padding: 8px 12px;">
+                            <span class="section-title">Supplier's Ref.</span>
+                            &nbsp;
+                        </td>
+                        <td class="p-2" style="padding: 8px 12px;">
+                            <span class="section-title">Other Reference(s)</span>
+                            &nbsp;
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <table class="items-table" style="width: 100%;">
+        <thead>
+            <tr class="b-bottom">
+                <th style="width: 5%;" class="tc">Sl No.</th>
+                <th style="width: 40%;" class="tl">Description of Goods</th>
+                <th style="width: 10%;" class="tc">HSN/SAC</th>
+                <th style="width: 10%;" class="tr">Quantity</th>
+                <th style="width: 10%;" class="tr">Rate</th>
+                <th style="width: 10%;" class="tc">per</th>
+                <th style="width: 15%;" class="tr">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in quote.items %}
+            <tr>
+                <td class="tc" style="color: #7f8c8d;">{{ loop.index }}</td>
+                <td class="bold">{{ item.name }}</td>
+                <td class="tc">{{ item.hsn_code }}</td>
+                <td class="tr bold">{{ item.quantity }}</td>
+                <td class="tr">{{ "{:,.2f}".format(item.selling_price) }}</td>
+                <td class="tc" style="color: #7f8c8d;">NOS</td>
+                <td class="tr bold">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+            </tr>
+            {% endfor %}
+            {% if quote.cgst_total > 0 %}
+            <tr>
+                <td></td><td class="tr" style="color: #7f8c8d;">OUTPUT CGST</td><td></td><td></td><td></td><td></td>
+                <td class="tr">{{ "{:,.2f}".format(quote.cgst_total) }}</td>
+            </tr>
+            {% endif %}
+            {% if quote.sgst_total > 0 %}
+            <tr>
+                <td></td><td class="tr" style="color: #7f8c8d;">OUTPUT SGST</td><td></td><td></td><td></td><td></td>
+                <td class="tr">{{ "{:,.2f}".format(quote.sgst_total) }}</td>
+            </tr>
+            {% endif %}
+            {% if quote.igst_total > 0 %}
+            <tr>
+                <td></td><td class="tr" style="color: #7f8c8d;">OUTPUT IGST</td><td></td><td></td><td></td><td></td>
+                <td class="tr">{{ "{:,.2f}".format(quote.igst_total) }}</td>
+            </tr>
+            {% endif %}
+            {% if quote.installation_charges > 0 or quote.wiring_charges > 0 or quote.transport_charges > 0 %}
+            <tr>
+                <td></td><td class="tr" style="color: #7f8c8d;">Addl. Charges (Install/Transport)</td><td></td><td></td><td></td><td></td>
+                <td class="tr">{{ "{:,.2f}".format(quote.installation_charges + quote.wiring_charges + quote.transport_charges) }}</td>
+            </tr>
+            {% endif %}
+            <tr class="last-row">
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
+            <tr>
+                <td colspan="6" class="tr" style="text-transform: uppercase; letter-spacing: 1px; color: #7f8c8d;">Total Amount</td>
+                <td class="tr" style="font-size: 11pt; font-weight: bold; color: #2c3e50; background: #f8f9fa;">&#8377; {{ "{:,.2f}".format(quote.grand_total) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="p-2 b-bottom" style="background: #fdfefe; padding: 10px 12px;">
+        <span class="section-title">Amount Chargeable (in words)</span>
+        <strong style="font-size: 9.5pt; color: #2c3e50;">{{ amount_in_words }}</strong>
+    </div>
+
+    <table class="tax-table b-bottom" style="width: 100%;">
+        <thead>
+            <tr class="b-bottom">
+                <th rowspan="2" class="b-right tc" style="width:20%;">HSN/SAC</th>
+                <th rowspan="2" class="b-right tr" style="width:20%;">Taxable<br>Value</th>
+                <th colspan="2" class="b-right tc" style="width:20%;">Central Tax</th>
+                <th colspan="2" class="b-right tc" style="width:20%;">State Tax</th>
+                <th rowspan="2" class="tr" style="width:20%;">Total<br>Tax Amount</th>
+            </tr>
+            <tr class="b-bottom">
+                <th class="b-right tr">Rate</th>
+                <th class="b-right tr">Amount</th>
+                <th class="b-right tr">Rate</th>
+                <th class="b-right tr">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% set total_taxable = namespace(value=0) %}
+            {% set total_c_tax = namespace(value=0) %}
+            {% set total_s_tax = namespace(value=0) %}
+            {% for item in quote.items %}
+            {% set half_gst = item.gst_percent / 2 %}
+            {% set c_tax = item.taxable_value * half_gst / 100 %}
+            {% set s_tax = item.taxable_value * half_gst / 100 %}
+            {% set total_taxable.value = total_taxable.value + item.taxable_value %}
+            {% set total_c_tax.value = total_c_tax.value + c_tax %}
+            {% set total_s_tax.value = total_s_tax.value + s_tax %}
+            <tr>
+                <td class="b-right tc" style="color:#7f8c8d;">{{ item.hsn_code }}</td>
+                <td class="b-right tr">{{ "{:,.2f}".format(item.taxable_value) }}</td>
+                <td class="b-right tr" style="color:#7f8c8d;">{{ "{:,.1f}".format(half_gst) }}%</td>
+                <td class="b-right tr">{{ "{:,.2f}".format(c_tax) }}</td>
+                <td class="b-right tr" style="color:#7f8c8d;">{{ "{:,.1f}".format(half_gst) }}%</td>
+                <td class="b-right tr">{{ "{:,.2f}".format(s_tax) }}</td>
+                <td class="tr bold">{{ "{:,.2f}".format(c_tax + s_tax) }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="b-top" style="background: #f8f9fa;">
+                <td class="b-right tr bold" style="color:#2c3e50;">Total</td>
+                <td class="b-right tr bold" style="color:#2c3e50;">{{ "{:,.2f}".format(total_taxable.value) }}</td>
+                <td class="b-right"></td>
+                <td class="b-right tr bold" style="color:#2c3e50;">{{ "{:,.2f}".format(total_c_tax.value) }}</td>
+                <td class="b-right"></td>
+                <td class="b-right tr bold" style="color:#2c3e50;">{{ "{:,.2f}".format(total_s_tax.value) }}</td>
+                <td class="tr bold" style="color:#2c3e50;">{{ "{:,.2f}".format(total_c_tax.value + total_s_tax.value) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table class="no-border-table" style="width: 100%;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding: 12px;" class="p-2">
+                <span class="section-title">Company's GSTIN/UIN</span>
+                <strong style="font-size:10pt;">{{ company.gstin }}</strong><br><br>
+                <span class="section-title" style="margin-bottom: 4px;">Declaration</span>
+                <div style="color: #7f8c8d; line-height: 1.4;">We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.</div>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding: 12px; background: #fdfefe;" class="p-2 b-left">
+                <span class="section-title" style="margin-bottom: 6px;">Company's Bank Details</span>
+                <table class="no-border-table" style="font-size: 8.5pt;">
+                    <tr><td style="color:#7f8c8d; width: 35%;">Bank Name</td><td>: <strong>{{ company.bank_name }}</strong></td></tr>
+                    <tr><td style="color:#7f8c8d;">A/c No.</td><td>: <strong>{{ company.account_number }}</strong></td></tr>
+                    <tr><td style="color:#7f8c8d;">Branch & IFSC</td><td>: <strong>{{ company.ifsc_code }}</strong></td></tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <div class="b-top p-2 tr" style="height: 100px; position: relative; background: #fff;">
+        <div style="position: absolute; bottom: 15px; right: 15px; text-align: center;">
+            <div class="bold" style="color: #2c3e50; font-size: 9pt;">for {{ company.name }}</div>
+            <br><br><br>
+            <div style="color: #7f8c8d; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 1px; border-top: 1px solid #dcdde1; padding-top: 4px; display: inline-block;">Authorised Signatory</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

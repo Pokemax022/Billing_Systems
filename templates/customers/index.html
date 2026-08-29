@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- ── Page Header ── -->
+<div class="page-header mb-4">
+  <div class="page-header-left">
+    <div class="page-breadcrumb">
+      <a href="{{ url_for('dashboard.index') }}"><i class="fas fa-home"></i></a>
+      <span>›</span><span>Customers</span>
+    </div>
+    <h4 class="page-title">Customers</h4>
+    <div class="page-subtitle">Manage your client base and contact information</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap page-header-right">
+    <a href="{{ url_for('customers.add') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i> Add Customer
+    </a>
+  </div>
+</div>
+
+<!-- FAB for mobile -->
+<a href="{{ url_for('customers.add') }}" class="fab-btn" title="Add Customer">
+  <i class="fas fa-plus"></i>
+</a>
+
+<!-- ── Mini Stats ── -->
+<div class="mini-stats-row mb-4">
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(21,101,192,0.12);color:#1565c0;">
+      <i class="fas fa-users"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">Total Customers</div>
+      <div class="mini-stat-value">{{ customers | length }}</div>
+    </div>
+  </div>
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(46,125,50,0.12);color:#2e7d32;">
+      <i class="fas fa-user-check"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">With GSTIN</div>
+      <div class="mini-stat-value">{{ customers | selectattr('gst_number') | list | length }}</div>
+    </div>
+  </div>
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(0,131,143,0.12);color:#00838f;">
+      <i class="fas fa-envelope"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">With Email</div>
+      <div class="mini-stat-value">{{ customers | selectattr('email') | list | length }}</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Search Bar ── -->
+<div class="search-filter-bar mb-3">
+  <div class="search-wrap input-icon-wrap">
+    <i class="input-icon fas fa-search"></i>
+    <input type="text" id="customerSearch" class="form-control" placeholder="Search by name, mobile, email…">
+  </div>
+</div>
+
+<!-- ── DESKTOP TABLE ── -->
+<div class="desktop-table">
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th style="width:48px;"></th>
+              <th>Name</th>
+              <th>Mobile</th>
+              <th>Email</th>
+              <th>GSTIN</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set avatar_classes = ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal','avatar-pink'] %}
+            {% for c in customers %}
+            <tr class="cust-row" data-search="{{ (c.name or '') ~ ' ' ~ (c.mobile or '') ~ ' ' ~ (c.email or '') }}">
+              <td>
+                <div class="cust-avatar {{ avatar_classes[loop.index0 % 6] }}">
+                  {{ (c.name[0] if c.name else 'C') | upper }}
+                </div>
+              </td>
+              <td>
+                <div style="font-weight:600;color:var(--text-primary);">{{ c.name or 'Unnamed Customer' }}</div>
+              </td>
+              <td>
+                {% if c.mobile %}
+                <a href="tel:{{ c.mobile }}" style="color:var(--text-primary);text-decoration:none;">
+                  <i class="fas fa-phone-alt me-1" style="color:var(--text-muted);font-size:.75rem;"></i>{{ c.mobile }}
+                </a>
+                {% else %}
+                <span class="text-muted" style="font-size:.82rem;">—</span>
+                {% endif %}
+              </td>
+              <td class="text-muted">{{ c.email or '—' }}</td>
+              <td>
+                {% if c.gst_number %}
+                  <span class="status-badge" style="background:var(--badge-paid-bg);color:var(--badge-paid-text);font-size:.68rem;">
+                    <i class="fas fa-check-circle"></i> {{ c.gst_number }}
+                  </span>
+                {% else %}
+                  <span class="text-muted" style="font-size:.82rem;">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex gap-2">
+                  <a href="{{ url_for('customers.edit', id=c.id) }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-edit me-1"></i>Edit
+                  </a>
+                  <form action="{{ url_for('customers.delete', id=c.id) }}" method="POST"
+                        onsubmit="return confirm('Delete {{ (c.name or 'Customer') | replace('\'', '\\\'') }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="fas fa-trash me-1"></i>Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <span class="empty-icon"><i class="fas fa-users"></i></span>
+                  <h5>No customers yet</h5>
+                  <p>Add your first customer to get started.</p>
+                  <a href="{{ url_for('customers.add') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i>Add Customer
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MOBILE CARD LIST ── -->
+<div class="mobile-card-list">
+  {% set avatar_classes = ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal','avatar-pink'] %}
+  {% for c in customers %}
+  <div class="data-card cust-row" data-search="{{ (c.name or '') ~ ' ' ~ (c.mobile or '') ~ ' ' ~ (c.email or '') }}">
+    <div class="data-card-header">
+      <div class="d-flex align-items-center gap-3">
+        <div class="cust-avatar {{ avatar_classes[loop.index0 % 6] }}">{{ (c.name[0] if c.name else 'C') | upper }}</div>
+        <div>
+          <div class="data-card-title">{{ c.name or 'Unnamed Customer' }}</div>
+          <div class="data-card-subtitle">
+            <i class="fas fa-phone-alt me-1" style="font-size:.65rem;"></i>{{ c.mobile or 'No Phone' }}
+          </div>
+        </div>
+      </div>
+      {% if c.gst_number %}
+      <span class="status-badge" style="background:var(--badge-paid-bg);color:var(--badge-paid-text);font-size:.68rem;">
+        GST ✓
+      </span>
+      {% endif %}
+    </div>
+    <div class="data-card-meta">
+      {% if c.email %}
+      <div class="meta-pill"><i class="fas fa-envelope"></i> {{ c.email }}</div>
+      {% endif %}
+      {% if c.gst_number %}
+      <div class="meta-pill"><i class="fas fa-building"></i> {{ c.gst_number }}</div>
+      {% endif %}
+    </div>
+    <div class="data-card-actions">
+      <a href="{{ url_for('customers.edit', id=c.id) }}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-edit me-1"></i>Edit
+      </a>
+      <form action="{{ url_for('customers.delete', id=c.id) }}" method="POST"
+            onsubmit="return confirm('Delete {{ (c.name or 'Customer') | replace('\'', '\\\'') }}?');" style="flex:1;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+          <i class="fas fa-trash me-1"></i>Delete
+        </button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon"><i class="fas fa-users"></i></span>
+    <h5>No customers yet</h5>
+    <p>Add your first customer to get started.</p>
+    <a href="{{ url_for('customers.add') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i>Add Customer
+    </a>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+document.getElementById('customerSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.cust-row').forEach(row => {
+    const text = (row.dataset.search || '').toLowerCase();
+    row.style.display = text.includes(q) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}

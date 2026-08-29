@@ -1,0 +1,323 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+/* ── Quotations Index Enhancements ── */
+.quote-num { font-weight: 700; color: var(--accent-primary); font-size: 0.9rem; letter-spacing: 0.3px; }
+.table-action-cell { white-space: nowrap; }
+
+/* Action Buttons */
+.action-btn-sm {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+.action-btn-sm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+.action-btn-sm.view-btn:hover { border-color: #0288d1; color: #0288d1; background: rgba(2,136,209,0.08); }
+.action-btn-sm.wa-btn:hover   { border-color: #25D366; color: #25D366; background: rgba(37,211,102,0.1); }
+.action-btn-sm.edit-btn:hover { border-color: var(--accent-primary); color: var(--accent-primary); background: var(--accent-glow); }
+.action-btn-sm.pdf-btn:hover  { border-color: #2e7d32; color: #2e7d32; background: rgba(46,125,50,0.08); }
+.action-btn-sm.del-btn:hover  { border-color: #c62828; color: #c62828; background: rgba(198,40,40,0.08); }
+
+/* Mobile card view */
+.q-card-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+.q-card-amount { font-size: 1.15rem; font-weight: 800; color: var(--text-primary); }
+.q-card-sub    { font-size: 0.78rem; color: var(--text-muted); }
+</style>
+
+<!-- ── Page Header ── -->
+<div class="page-header mb-4 fade-in-up">
+  <div class="page-header-left">
+    <div class="page-breadcrumb">
+      <a href="{{ url_for('dashboard.index') }}"><i class="fas fa-home"></i></a>
+      <span>›</span><span>Quotations</span>
+    </div>
+    <h4 class="page-title">Quotations</h4>
+    <div class="page-subtitle">Manage all quotations, generate professional PDFs, and send via WhatsApp</div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap page-header-right">
+    <a href="{{ url_for('quotations.whatsapp_menu') }}" class="btn btn-whatsapp btn-sm">
+      <i class="fab fa-whatsapp me-1"></i> WhatsApp Hub
+    </a>
+    <a href="{{ url_for('quotations.create') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i> New Quotation
+    </a>
+  </div>
+</div>
+
+<!-- FAB for mobile -->
+<a href="{{ url_for('quotations.create') }}" class="fab-btn" title="New Quotation">
+  <i class="fas fa-plus"></i>
+</a>
+
+<!-- ── Mini Stats Row ── -->
+<div class="mini-stats-row mb-4 fade-in-up">
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(21,101,192,0.12);color:#1565c0;">
+      <i class="fas fa-file-invoice"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">Total Quotations</div>
+      <div class="mini-stat-value">{{ quotations | length }}</div>
+    </div>
+  </div>
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(46,125,50,0.12);color:#2e7d32;">
+      <i class="fas fa-rupee-sign"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">Total Quoted Value</div>
+      <div class="mini-stat-value" style="font-size:1.15rem;">
+        ₹{{ "{:,.0f}".format(quotations | map(attribute='grand_total') | select('number') | sum if quotations else 0.0) }}
+      </div>
+    </div>
+  </div>
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(37,211,102,0.14);color:#25D366;">
+      <i class="fab fa-whatsapp"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">WhatsApp Ready</div>
+      <div class="mini-stat-value">
+        {{ quotations | selectattr('customer') | list | length }}
+      </div>
+    </div>
+  </div>
+  <div class="mini-stat-box">
+    <div class="mini-stat-icon" style="background:rgba(124,77,255,0.12);color:#7c4dff;">
+      <i class="fas fa-percent"></i>
+    </div>
+    <div>
+      <div class="mini-stat-label">Total GST Tax</div>
+      <div class="mini-stat-value" style="font-size:1.15rem;">
+        ₹{{ "{:,.0f}".format(quotations | map(attribute='cgst_total') | select('number') | sum + quotations | map(attribute='sgst_total') | select('number') | sum + quotations | map(attribute='igst_total') | select('number') | sum if quotations else 0.0) }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Search & Filter Bar ── -->
+<div class="search-filter-bar mb-3 fade-in-up">
+  <div class="search-wrap input-icon-wrap w-100">
+    <i class="input-icon fas fa-search"></i>
+    <input type="text" id="quoteSearch" class="form-control" placeholder="Search by quote #, customer name, mobile number, date, amount…">
+  </div>
+</div>
+
+<!-- ── DESKTOP TABLE ── -->
+<div class="desktop-table fade-in-up">
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0" id="quotesTable">
+          <thead>
+            <tr>
+              <th>Quote #</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Sub Total</th>
+              <th>Tax</th>
+              <th>Grand Total</th>
+              <th class="text-end pe-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in quotations %}
+            {% set sub = q.sub_total or 0.0 %}
+            {% set tax = (q.cgst_total or 0.0) + (q.sgst_total or 0.0) + (q.igst_total or 0.0) %}
+            {% set grand = q.grand_total or 0.0 %}
+            {% set cust_name = q.customer.name if (q.customer and q.customer.name) else 'Deleted Customer' %}
+            {% set cust_phone = q.customer.mobile if (q.customer and q.customer.mobile) else '' %}
+            {% set date_str = q.date.strftime('%d %b %Y') if q.date else '' %}
+            <tr class="quote-row" data-search="{{ (q.quotation_number or '') ~ ' ' ~ cust_name ~ ' ' ~ cust_phone ~ ' ' ~ date_str ~ ' ' ~ grand }}">
+              <td><span class="quote-num">{{ q.quotation_number }}</span></td>
+              <td class="text-muted">{{ q.date.strftime('%d %b %Y') if q.date else '—' }}</td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="cust-avatar {{ ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal'][loop.index0 % 5] }}" style="width:32px;height:32px;font-size:.75rem;">
+                    {{ (cust_name[0] if cust_name else 'C') | upper }}
+                  </div>
+                  <div>
+                    <div style="font-weight:600;color:var(--text-primary);">{{ cust_name }}</div>
+                    {% if cust_phone %}
+                    <small class="text-muted"><i class="fas fa-phone-alt me-1" style="font-size:0.65rem;"></i>{{ cust_phone }}</small>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>₹{{ "{:,.2f}".format(sub) }}</td>
+              <td class="text-muted">₹{{ "{:,.2f}".format(tax) }}</td>
+              <td><strong>₹{{ "{:,.2f}".format(grand) }}</strong></td>
+              <td class="table-action-cell text-end pe-3">
+                <div class="d-inline-flex gap-1 align-items-center">
+                  <a href="{{ url_for('quotations.view', id=q.id) }}" class="action-btn-sm view-btn" title="View Quotation">
+                    <i class="fas fa-eye"></i>
+                  </a>
+                  <a href="{{ url_for('quotations.whatsapp_menu', id=q.id) }}" class="action-btn-sm wa-btn" title="Send via WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                  </a>
+                  <a href="{{ url_for('quotations.edit', id=q.id) }}" class="action-btn-sm edit-btn" title="Edit Quotation">
+                    <i class="fas fa-edit"></i>
+                  </a>
+                  <a href="{{ url_for('quotations.select_template', id=q.id) }}" class="action-btn-sm pdf-btn" title="Select & Download PDF">
+                    <i class="fas fa-download"></i>
+                  </a>
+                  <form method="POST" action="{{ url_for('quotations.delete', id=q.id) }}" style="display:inline;"
+                        data-quote-num="{{ q.quotation_number or 'Quotation' }}"
+                        onsubmit="return confirm('Delete quotation ' + this.dataset.quoteNum + '? This action cannot be undone.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="action-btn-sm del-btn" title="Delete Quotation" style="cursor:pointer;">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <span class="empty-icon"><i class="fas fa-file-invoice"></i></span>
+                  <h5>No quotations found</h5>
+                  <p>Create your first quotation to get started.</p>
+                  <a href="{{ url_for('quotations.create') }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> New Quotation
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <!-- No search results placeholder -->
+      <div id="noDesktopSearchResults" class="empty-state d-none py-4">
+        <span class="empty-icon"><i class="fas fa-search"></i></span>
+        <h5>No matching quotations found</h5>
+        <p class="text-muted small">Try searching with a different quotation number or customer name.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MOBILE CARD LIST ── -->
+<div class="mobile-card-list fade-in-up" id="mobileQuoteCards">
+  {% for q in quotations %}
+  {% set sub = q.sub_total or 0.0 %}
+  {% set tax = (q.cgst_total or 0.0) + (q.sgst_total or 0.0) + (q.igst_total or 0.0) %}
+  {% set grand = q.grand_total or 0.0 %}
+  {% set cust_name = q.customer.name if (q.customer and q.customer.name) else 'Deleted Customer' %}
+  {% set cust_phone = q.customer.mobile if (q.customer and q.customer.mobile) else '' %}
+  {% set date_str = q.date.strftime('%d %b %Y') if q.date else '' %}
+  <div class="data-card quote-row" data-search="{{ (q.quotation_number or '') ~ ' ' ~ cust_name ~ ' ' ~ cust_phone ~ ' ' ~ date_str ~ ' ' ~ grand }}">
+    <div class="data-card-header">
+      <div>
+        <div class="data-card-title">
+          <span class="quote-num">{{ q.quotation_number }}</span>
+        </div>
+        <div class="data-card-subtitle">
+          {{ q.date.strftime('%d %b %Y') if q.date else '—' }}
+        </div>
+      </div>
+      <div class="q-card-amount">₹{{ "{:,.0f}".format(grand) }}</div>
+    </div>
+    <div class="d-flex align-items-center gap-2 mb-2">
+      <div class="cust-avatar {{ ['avatar-blue','avatar-green','avatar-purple','avatar-orange','avatar-teal'][loop.index0 % 5] }}" style="width:28px;height:28px;font-size:.7rem;">
+        {{ (cust_name[0] if cust_name else 'C') | upper }}
+      </div>
+      <div>
+        <span style="font-size:.88rem;font-weight:600;color:var(--text-primary);">
+          {{ cust_name }}
+        </span>
+        {% if cust_phone %}
+        <div style="font-size:0.72rem;color:var(--text-muted);">
+          <i class="fas fa-phone-alt me-1"></i>{{ cust_phone }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="data-card-meta">
+      <div class="meta-pill"><i class="fas fa-percent"></i> Tax ₹{{ "{:,.0f}".format(tax) }}</div>
+      <div class="meta-pill"><i class="fas fa-tag"></i> Sub ₹{{ "{:,.0f}".format(sub) }}</div>
+    </div>
+    <div class="data-card-actions">
+      <a href="{{ url_for('quotations.view', id=q.id) }}" class="btn btn-outline-info btn-sm">
+        <i class="fas fa-eye me-1"></i>View
+      </a>
+      <a href="{{ url_for('quotations.edit', id=q.id) }}" class="btn btn-outline-primary btn-sm">
+        <i class="fas fa-edit me-1"></i>Edit
+      </a>
+      <a href="{{ url_for('quotations.whatsapp_menu', id=q.id) }}" class="btn btn-outline-whatsapp btn-sm">
+        <i class="fab fa-whatsapp me-1"></i>WhatsApp
+      </a>
+      <a href="{{ url_for('quotations.select_template', id=q.id) }}" class="btn btn-outline-success btn-sm">
+        <i class="fas fa-download me-1"></i>PDF
+      </a>
+      <form method="POST" action="{{ url_for('quotations.delete', id=q.id) }}" style="display:inline;flex:1;"
+            data-quote-num="{{ q.quotation_number or 'Quotation' }}"
+            onsubmit="return confirm('Delete quotation ' + this.dataset.quoteNum + '?');">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+          <i class="fas fa-trash me-1"></i>Delete
+        </button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="empty-icon"><i class="fas fa-file-invoice"></i></span>
+    <h5>No quotations found</h5>
+    <p>Create your first quotation to get started.</p>
+    <a href="{{ url_for('quotations.create') }}" class="btn btn-primary btn-sm">
+      <i class="fas fa-plus me-1"></i> New Quotation
+    </a>
+  </div>
+  {% endfor %}
+  <!-- Mobile no results placeholder -->
+  <div id="noMobileSearchResults" class="empty-state d-none py-4">
+    <span class="empty-icon"><i class="fas fa-search"></i></span>
+    <h5>No matching quotations</h5>
+    <p class="text-muted small">Try searching with a different keyword.</p>
+  </div>
+</div>
+
+<script>
+// Live search with empty state feedback
+document.getElementById('quoteSearch').addEventListener('input', function() {
+  const q = this.value.trim().toLowerCase();
+  const rows = document.querySelectorAll('.quote-row');
+  let visibleCount = 0;
+
+  rows.forEach(row => {
+    const text = (row.dataset.search || '').toLowerCase();
+    const matches = !q || text.includes(q);
+    row.style.display = matches ? '' : 'none';
+    if (matches) visibleCount++;
+  });
+
+  const desktopNoResults = document.getElementById('noDesktopSearchResults');
+  const mobileNoResults = document.getElementById('noMobileSearchResults');
+
+  if (rows.length > 0) {
+    if (desktopNoResults) {
+      desktopNoResults.classList.toggle('d-none', visibleCount > 0 || !q);
+    }
+    if (mobileNoResults) {
+      mobileNoResults.classList.toggle('d-none', visibleCount > 0 || !q);
+    }
+  }
+});
+</script>
+{% endblock %}

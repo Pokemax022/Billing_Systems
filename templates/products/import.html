@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Import Products from Excel</h2>
+    <a href="{{ url_for('products.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('products.import_excel') }}" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="mb-3">
+                <label for="file" class="form-label">Upload Excel (.xlsx) or CSV</label>
+                <input class="form-control" type="file" id="file" name="file" accept=".xlsx, .csv" required>
+            </div>
+            <button type="submit" class="btn btn-success"><i class="fas fa-upload"></i> Upload & Import</button>
+        </form>
+    </div>
+</div>
+
+<div class="alert alert-info">
+    <h5><i class="fas fa-info-circle"></i> Expected Excel Columns</h5>
+    <p>Please ensure your Excel file has a header row with the following exact column names:</p>
+    <ul>
+        <li><code>Name</code> (Required)</li>
+        <li><code>HSN</code></li>
+        <li><code>Brand</code></li>
+        <li><code>Warranty</code></li>
+        <li><code>Unit</code> (e.g. Pcs, Mtrs)</li>
+        <li><code>Dealer Price</code> (Internal Cost)</li>
+        <li><code>Customer Price</code> (Selling Price)</li>
+        <li><code>GST</code> (Percentage e.g. 18)</li>
+        <li><code>Stock</code></li>
+    </ul>
+    <p class="mb-0">Existing products with the exact same <code>Name</code> will be updated. New products will be created automatically.</p>
+</div>
+{% endblock %}

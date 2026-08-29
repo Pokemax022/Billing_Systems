@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Import History Logs</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0 table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Filename</th>
+                    <th>Total Rows</th>
+                    <th>Successfully Imported</th>
+                    <th>Duplicates Merged</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.created_at.strftime('%d-%m-%Y %H:%M:%S') }}</td>
+                    <td><span class="badge bg-secondary">{{ log.import_type|title }}</span></td>
+                    <td>{{ log.filename }}</td>
+                    <td>{{ log.total_rows }}</td>
+                    <td class="text-success fw-bold">{{ log.imported_rows }}</td>
+                    <td class="text-warning fw-bold">{{ log.duplicate_rows }}</td>
+                    <td>
+                        {% if log.status == 'Completed' %}
+                        <span class="badge bg-success">Success</span>
+                        {% else %}
+                        <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center py-4">No import logs found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

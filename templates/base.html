@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CCTV Pro — Professional Quotation, Billing & Profit Analytics Platform">
+    <title>CCTV Pro — Quotation &amp; Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}?v=2.3" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Apply theme before render to avoid flash -->
+    <script>
+      (function(){
+        const t = localStorage.getItem('cctv_theme') || 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
+</head>
+<body>
+
+    {% if current_user.is_authenticated %}
+
+    <!-- ══════════════════════════════════════
+         MOBILE TOP NAVBAR (hidden on desktop)
+    ══════════════════════════════════════ -->
+    <nav class="mobile-topnav d-flex d-lg-none" id="mobileTopNav">
+        <button class="hamburger-btn" id="sidebarToggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar" aria-label="Toggle navigation">
+            <i class="fas fa-bars pointer-events-none"></i>
+        </button>
+        <div class="brand-name">
+            <i class="fas fa-shield-halved"></i> CCTV Pro
+        </div>
+        <button id="mobileThemeToggle" class="hamburger-btn" type="button" title="Toggle theme" aria-label="Toggle dark mode">
+            <i class="fas fa-moon" id="mobileThemeIcon"></i>
+        </button>
+    </nav>
+
+    <!-- ══════════════════════════════════════
+         OFF-CANVAS SIDEBAR (Mobile)
+    ══════════════════════════════════════ -->
+    <div class="offcanvas offcanvas-start offcanvas-sidebar d-lg-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="mb-0 fw-bold" id="mobileSidebarLabel" style="color:#fff;letter-spacing:1px;">
+                <i class="fas fa-shield-halved me-2" style="color:#64b5f6;"></i>CCTV Pro
+            </h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body p-3 d-flex flex-column" style="gap:0; overflow-y: auto;">
+            <!-- Inline nav for mobile -->
+            <ul class="nav flex-column">
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('quotations') and request.endpoint != 'quotations.whatsapp_menu' %}active{% endif %}"
+                       href="{{ url_for('quotations.index') }}">
+                        <i class="fas fa-file-alt me-2"></i> Quotations
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint == 'quotations.whatsapp_menu' %}active{% endif %}"
+                       href="{{ url_for('quotations.whatsapp_menu') }}">
+                        <i class="fab fa-whatsapp me-2" style="color:#25D366;font-size:1.05rem;"></i> WhatsApp Quotations
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('invoices') %}active{% endif %}"
+                       href="{{ url_for('invoices.index') }}">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Invoices
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('customers') %}active{% endif %}"
+                       href="{{ url_for('customers.index') }}">
+                        <i class="fas fa-users me-2"></i> Customers
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('products') %}active{% endif %}"
+                       href="{{ url_for('products.index') }}">
+                        <i class="fas fa-box me-2"></i> Products
+                    </a>
+                </li>
+                <div class="sidebar-section-label mt-3 mb-2">ERP Module</div>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('import_erp') %}active{% endif %}"
+                       href="{{ url_for('import_erp.hub') }}">
+                        <i class="fas fa-cloud-upload-alt me-2"></i> Smart Import Hub
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link" href="{{ url_for('import_erp.logs') }}">
+                        <i class="fas fa-history me-2"></i> Import Logs
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link" href="{{ url_for('export.export_profit_report') }}">
+                        <i class="fas fa-chart-line me-2"></i> Profit Report
+                    </a>
+                </li>
+                <li class="nav-item mt-4">
+                    <a class="nav-link sidebar-link text-danger-soft" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════
+         MAIN LAYOUT
+    ══════════════════════════════════════ -->
+    <div class="d-flex" id="mainLayout">
+
+        <!-- ── DESKTOP SIDEBAR (Strictly hidden on mobile/tablet) ── -->
+        <div class="sidebar d-none d-lg-flex text-white p-3 flex-column" id="desktopSidebar">
+            <!-- Brand + Theme Toggle -->
+            <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3" style="border-color:rgba(255,255,255,0.12) !important;">
+                <h5 class="mb-0 fw-bold" style="letter-spacing:1px;color:#fff;">
+                    <i class="fas fa-shield-halved me-2" style="color:#64b5f6;"></i>CCTV Pro
+                </h5>
+                <button id="themeToggleBtn" class="theme-toggle-btn" type="button" title="Toggle dark/light mode" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+            </div>
+
+            <!-- Nav Links -->
+            <ul class="nav flex-column flex-grow-1">
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('dashboard') %}active{% endif %}"
+                       href="{{ url_for('dashboard.index') }}">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('quotations') and request.endpoint != 'quotations.whatsapp_menu' %}active{% endif %}"
+                       href="{{ url_for('quotations.index') }}">
+                        <i class="fas fa-file-alt me-2"></i> Quotations
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint == 'quotations.whatsapp_menu' %}active{% endif %}"
+                       href="{{ url_for('quotations.whatsapp_menu') }}">
+                        <i class="fab fa-whatsapp me-2" style="color:#25D366;font-size:1.05rem;"></i> WhatsApp
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('invoices') %}active{% endif %}"
+                       href="{{ url_for('invoices.index') }}">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> Invoices
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('customers') %}active{% endif %}"
+                       href="{{ url_for('customers.index') }}">
+                        <i class="fas fa-users me-2"></i> Customers
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('products') %}active{% endif %}"
+                       href="{{ url_for('products.index') }}">
+                        <i class="fas fa-box me-2"></i> Products
+                    </a>
+                </li>
+
+                <div class="sidebar-section-label mt-3 mb-2">ERP Module</div>
+
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link {% if request.endpoint and request.endpoint.startswith('import_erp') %}active{% endif %}"
+                       href="{{ url_for('import_erp.hub') }}">
+                        <i class="fas fa-cloud-upload-alt me-2"></i> Smart Import Hub
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link" href="{{ url_for('import_erp.logs') }}">
+                        <i class="fas fa-history me-2"></i> Import Logs
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a class="nav-link sidebar-link" href="{{ url_for('export.export_profit_report') }}">
+                        <i class="fas fa-chart-line me-2"></i> Profit Report
+                    </a>
+                </li>
+
+                <li class="nav-item mt-auto pt-3">
+                    <a class="nav-link sidebar-link text-danger-soft" href="{{ url_for('auth.logout') }}">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </li>
+            </ul>
+
+            <!-- User Badge -->
+            <div class="sidebar-user-badge mt-3">
+                <div class="sidebar-avatar">
+                    {{ current_user.username[0].upper() if current_user.username else 'U' }}
+                </div>
+                <div>
+                    <div class="sidebar-user-name">{{ current_user.username | title }}</div>
+                    <div class="sidebar-user-role">Administrator</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MAIN CONTENT ── -->
+        <div class="main-content flex-grow-1 p-4" id="mainContentArea">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show fade-in-up" role="alert">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'danger' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    {% else %}
+        <!-- Login layout -->
+        {% block login_content %}{% endblock %}
+    {% endif %}
+
+    <!-- Toast container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index:9999;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}?v=2.3"></script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
