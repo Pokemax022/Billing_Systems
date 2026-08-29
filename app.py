@@ -19,11 +19,12 @@ def create_app(config_object=None):
     """Application Factory for CCTV Software."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
     static_dir = os.path.join(base_dir, 'static')
+    public_static_dir = os.path.join(base_dir, 'public', 'static')
     template_dir = os.path.join(base_dir, 'templates')
     
     app = Flask(
         __name__,
-        static_folder=static_dir,
+        static_folder=static_dir if os.path.exists(static_dir) else public_static_dir,
         static_url_path='/static',
         template_folder=template_dir
     )
@@ -102,6 +103,9 @@ def create_app(config_object=None):
     @app.route('/static/<path:filename>')
     def serve_static_asset(filename):
         from flask import send_from_directory
+        for s_dir in [static_dir, public_static_dir]:
+            if os.path.exists(os.path.join(s_dir, filename)):
+                return send_from_directory(s_dir, filename)
         return send_from_directory(static_dir, filename)
 
     # Register Error Handlers
